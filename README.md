@@ -12,7 +12,8 @@ styles.css            all styling
 config.js             ← the only file you edit (city, language, theme, notes…)
 app.js                clock, flip animation, weather, tick sound, night dim
 keep-awake.mp4        2-pixel silent loop that asks iOS not to sleep
-tick.wav / tock.wav   the second-hand click (33 ms each, 3.5 KB)
+sounds/               four tick/tock sets, ~10 KB each (see Sound, below)
+soundlab.html         tap-to-compare page for choosing a set
 fonts/                Rajdhani (SIL OFL) subset to ASCII, as WOFF for old iOS
 icon.svg              tab / bookmark icon
 apple-touch-icon.png  home-screen icon
@@ -40,11 +41,26 @@ Everything lives in `config.js`. The lines you are most likely to touch:
 | `theme: 'dark'` | `'dark'` is warm charcoal and cream; `'light'` is paper and ink. |
 | `hour12: false` | `true` gives a 12-hour clock with a small AM/PM. |
 | `notes: []` | The line under the date. `[]` shows nothing at all; give it strings and it rotates through them every `noteEvery` minutes. |
-| `tickSound: true` | Tick and tock on every second, 0.45 by default (`tickVolume`, 0 mutes it). iOS needs one tap on the page before audio may start, and the hardware mute switch silences it. |
+| `tickSound: true` | Tick and tock on every second, 0.45 by default (`tickVolume`, 0 mutes it). `tickSoundSet` picks the voice: `'flap'`, `'wood'`, `'sharp'` or `'soft'`. iOS needs one tap on the page before audio may start, and the hardware mute switch silences it. |
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the screen fades to `nightDim` (0.55) brightness. Set `nightDim: 0` to turn it off. |
 | `showSeconds` | Hide the small seconds pair for a calmer board. |
 | `animate: false` | Turns the flip into a plain cut. Only needed if a very old iPad stutters. |
 | `drift: false` | Nudges the layout a few pixels every four minutes so the panel never holds one image for weeks. Off by default: on an old iPad the full-screen re-rasterise it forces can flash the cards. |
+
+## Sound
+
+Four sets ship in `sounds/`, each a pair (tick for even seconds, tock for odd,
+a fifth lower). They are models of the mechanism, not samples: an impact burst
+band-limited twice over, a short ring from the plastic or metal it hit, and a
+little low body from the case, all over in 65–75 ms because a flip clock clack
+is that short. `tools/make-sounds.py` regenerates them from those parameters.
+
+To choose one, open `soundlab.html` on the iPad and tap each row. Then set
+`tickSoundSet` in `config.js`, or try one on the clock without editing anything:
+
+```
+https://yuebit.github.io/flip-clock/?sound=wood
+```
 
 ## Put it on the iPad
 

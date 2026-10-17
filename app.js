@@ -515,6 +515,15 @@
      instead of whenever an <audio> element feels like starting.
      ------------------------------------------------------------- */
 
+  /* Which recorded set to play. ?sound=wood on the URL overrides the config so a
+     set can be tried on the clock itself without editing anything. */
+  var SOUND_SETS = { flap: 1, wood: 1, sharp: 1, soft: 1 };
+  var soundSet = (function () {
+    var m = /[?&]sound=([a-z]+)/.exec(location.search);
+    var want = m ? m[1] : String(pick('tickSoundSet', 'flap'));
+    return SOUND_SETS[want] ? want : 'flap';
+  })();
+
   var sound = {
     on: pick('tickSound', true) !== false,
     volume: Math.min(1, Math.max(0, num(pick('tickVolume', 0.45)))),
@@ -538,7 +547,7 @@
 
   function loadClip(name) {
     var x = new XMLHttpRequest();
-    x.open('GET', name + '.wav?v=1', true);
+    x.open('GET', 'sounds/' + soundSet + '-' + name + '.wav?v=2', true);
     x.responseType = 'arraybuffer';
     x.onload = function () {
       if (!x.response) { return; }
@@ -573,8 +582,8 @@
   function fallbackArm() {
     if (sound.fallback) { return; }
     try {
-      var a = new Audio('tick.wav?v=1');
-      var b = new Audio('tock.wav?v=1');
+      var a = new Audio('sounds/' + soundSet + '-tick.wav?v=2');
+      var b = new Audio('sounds/' + soundSet + '-tock.wav?v=2');
       a.preload = 'auto'; b.preload = 'auto';
       a.muted = true; a.play(); a.pause(); a.muted = false;
       b.muted = true; b.play(); b.pause(); b.muted = false;
