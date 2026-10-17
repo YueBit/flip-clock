@@ -3,8 +3,8 @@
 
 var CLOCK_CONFIG = {
 
-  // "auto" follows the iPad's language (zh -> Chinese, anything else -> English)
-  lang: 'auto',
+  // 'en' English only (default). 'zh' Chinese, 'auto' follows the iPad's language.
+  lang: 'en',
 
   // false = 24-hour clock (09:41), true = 12-hour with a small AM/PM
   hour12: false,
@@ -27,9 +27,13 @@ var CLOCK_CONFIG = {
   weatherEvery: 15,   // minutes between refreshes
 
   // ---- the line under the date, rotating every noteEvery minutes ----
-  // Leave as [] to use a built-in pair of Robodiag lines in the current language.
+  // Empty means no line at all. Example: ['Ship the harness', 'Call back at 4']
   notes: [],
   noteEvery: 30,
+
+  // ---- tick / tock on every second ----
+  tickSound: true,
+  tickVolume: 0.35,   // 0 = silent
 
   // ---- night dimming (screen only; it cannot touch the iPad's brightness) ----
   nightStart: 23,

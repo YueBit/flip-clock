@@ -1,3 +1,19 @@
+/* Rajdhani (SIL OFL, see fonts/OFL.txt) — subset to ASCII, shipped as WOFF
+   because iOS 9 cannot read WOFF2. Self-hosted so the iPad renders exactly what
+   the desktop preview shows. */
+@font-face {
+  font-family: "Rajdhani";
+  src: url("fonts/rajdhani-500.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Rajdhani";
+  src: url("fonts/rajdhani-600.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+}
+
 /* ---------------------------------------------------------------
    Robodiag flip clock
    Written for old Safari: no CSS custom properties, no grid, no
@@ -116,9 +132,9 @@ body {
   width: 100%;
   text-align: center;
   color: #f4ecdd;
-  font-family: "Didot", "Baskerville", "Hoefler Text", "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-family: "Rajdhani", "Menlo", "SF Mono", "DejaVu Sans Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
@@ -126,30 +142,32 @@ body {
 .facet.leaf-top {
   -webkit-transform: rotateX(-90deg);
   transform: rotateX(-90deg);
+  opacity: 0;
   z-index: 3;
 }
 
 .facet.leaf-bot {
   -webkit-transform: rotateX(90deg);
   transform: rotateX(90deg);
+  opacity: 0;
   z-index: 3;
 }
 
 @-webkit-keyframes flipTop {
-  from { -webkit-transform: rotateX(0deg); }
-  to   { -webkit-transform: rotateX(-90deg); }
+  from { -webkit-transform: rotateX(0deg); opacity: 1; }
+  to   { -webkit-transform: rotateX(-90deg); opacity: 1; }
 }
 @keyframes flipTop {
-  from { transform: rotateX(0deg); }
-  to   { transform: rotateX(-90deg); }
+  from { transform: rotateX(0deg); opacity: 1; }
+  to   { transform: rotateX(-90deg); opacity: 1; }
 }
 @-webkit-keyframes flipBot {
-  from { -webkit-transform: rotateX(90deg); }
-  to   { -webkit-transform: rotateX(0deg); }
+  from { -webkit-transform: rotateX(90deg); opacity: 1; }
+  to   { -webkit-transform: rotateX(0deg); opacity: 1; }
 }
 @keyframes flipBot {
-  from { transform: rotateX(90deg); }
-  to   { transform: rotateX(0deg); }
+  from { transform: rotateX(90deg); opacity: 1; }
+  to   { transform: rotateX(0deg); opacity: 1; }
 }
 
 .leaf-top.flip {
@@ -214,11 +232,7 @@ body.theme-light .facet.leaf-bot:after {
   left: 50%;
   background: #8d8477;
   border-radius: 50%;
-  -webkit-transition: opacity 0.6s ease;
-  transition: opacity 0.6s ease;
 }
-
-.colon.off i { opacity: 0.3; }
 
 /* AM / PM */
 .period {
@@ -238,7 +252,10 @@ body.theme-light .facet.leaf-bot:after {
 
 .date {
   color: #ded4c3;
-  font-family: "Didot", "Baskerville", "Hoefler Text", Georgia, "Songti SC", "STSong", serif;
+  font-family: "Rajdhani", "Songti SC", "STSong", serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 
@@ -251,6 +268,8 @@ body.theme-light .facet.leaf-bot:after {
 
 .meta {
   color: #928a7d;
+  font-family: "Rajdhani", "Menlo", "SF Mono", sans-serif;
+  font-weight: 500;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.16em;

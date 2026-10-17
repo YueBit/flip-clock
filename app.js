@@ -39,7 +39,6 @@
         return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
           this.weekdays[d.getDay()];
       },
-      sentences: ['机器人诊断基础设施', '让每台机器人都拥有可靠的开始'],
       weatherError: ''
     },
     en: {
@@ -50,8 +49,6 @@
         return this.weekdays[d.getDay()] + ', ' + d.getDate() + ' ' +
           this.months[d.getMonth()] + ' ' + d.getFullYear();
       },
-      sentences: ['Diagnostic infrastructure for every robot',
-        'Every robot deserves a reliable start'],
       weatherError: ''
     }
   }[lang];
@@ -155,6 +152,8 @@
     if (u.timer) { clearTimeout(u.timer); u.timer = null; }
     u.top.textContent = u.cur;
     u.bot.textContent = u.cur;
+    u.ltop.textContent = u.cur;
+    u.lbot.textContent = u.cur;
     u.ltopEl.className = 'facet leaf-top';
     u.lbotEl.className = 'facet leaf-bot';
     u.busy = false;
@@ -223,9 +222,9 @@
      ------------------------------------------------------------- */
 
   function sizeUnit(u, h) {
-    var w = h * 0.66;
-    var fs = Math.round(h * 0.76);
-    var r = Math.max(3, Math.round(h * 0.075));
+    var w = h * 0.62;
+    var fs = Math.round(h * 0.92);
+    var r = Math.max(3, Math.round(h * 0.035));
     var spans, i;
 
     u.el.style.width = w + 'px';
@@ -251,7 +250,7 @@
   function layout() {
     var W = document.documentElement.clientWidth || window.innerWidth;
     var H = document.documentElement.clientHeight || window.innerHeight;
-    var ratio = showSeconds ? 3.85 : 3.1;
+    var ratio = showSeconds ? 3.6 : 2.9;
     var h = Math.min(W * 0.92 / ratio, H * 0.44);
     if (h < 64) { h = 64; }
 
@@ -280,7 +279,7 @@
     var ruleEl = el('rule');
     var metaEl = document.querySelector('.meta');
 
-    dateEl.style.fontSize = Math.round(h * 0.135) + 'px';
+    dateEl.style.fontSize = Math.round(h * 0.105) + 'px';
     dateEl.style.marginTop = Math.round(h * 0.17) + 'px';
     ruleEl.style.width = Math.round(h * 0.5) + 'px';
     ruleEl.style.marginTop = Math.round(h * 0.11) + 'px';
@@ -299,6 +298,7 @@
      ------------------------------------------------------------- */
 
   var lastMinute = -1;
+  var lastSecond = -1;
 
   function tick(fresh) {
     var d = new Date();
@@ -321,11 +321,11 @@
       setUnit(units.s1u, ss.charAt(0));
       setUnit(units.s2u, ss.charAt(1));
     }
-    if (hour12 && periodEl.textContent !== period) { periodEl.textContent = period; }
+    var second = d.getSeconds();
+    if (lastSecond !== -1 && second !== lastSecond) { playTick(second); }
+    lastSecond = second;
 
-    // the colon breathes with the seconds
-    var odd = d.getSeconds() % 2 === 0;
-    colon.className = odd ? 'colon' : 'colon off';
+    if (hour12 && periodEl.textContent !== period) { periodEl.textContent = period; }
 
     var minute = d.getHours() * 60 + d.getMinutes();
     if (minute !== lastMinute || fresh) {
@@ -339,9 +339,9 @@
 
   function loop() {
     tick(false);
-    var ms = new Date().getMilliseconds();
-    var wait = 1000 - ms + 20;
-    setTimeout(loop, wait < 100 ? wait + 1000 : wait);
+    var wait = 1000 - new Date().getMilliseconds() + 15;
+    if (wait < 15) { wait += 1000; }
+    setTimeout(loop, wait);
   }
 
   /* -------------------------------------------------------------
@@ -462,9 +462,14 @@
 
   function startNotes() {
     var notes = pick('notes', null);
-    if (!notes || !notes.length) { notes = L.sentences; }
     var noteEl = el('note');
     var i = 0;
+
+    if (!notes || !notes.length) {
+      noteEl.textContent = '';
+      show(el('sep'), false);
+      return;
+    }
 
     function paint(first) {
       if (first) {
@@ -489,6 +494,72 @@
         paint(false);
       }, mins * 60000);
     }
+  }
+
+
+  /* -------------------------------------------------------------
+     Tick and tock — Web Audio, so the click lands on the second
+     instead of whenever an <audio> element feels like starting.
+     ------------------------------------------------------------- */
+
+  var sound = {
+    on: pick('tickSound', true) !== false,
+    volume: Math.min(1, Math.max(0, num(pick('tickVolume', 0.35)))),
+    ctx: null,
+    buffers: {},
+    loaded: false
+  };
+
+  function audioCtx() {
+    if (sound.ctx) { return sound.ctx; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { return null; }
+    try { sound.ctx = new AC(); } catch (e) { sound.ctx = null; }
+    return sound.ctx;
+  }
+
+  function loadClip(name) {
+    var x = new XMLHttpRequest();
+    x.open('GET', name + '.wav?v=1', true);
+    x.responseType = 'arraybuffer';
+    x.onload = function () {
+      if (!x.response) { return; }
+      var done = function (buf) { if (buf) { sound.buffers[name] = buf; } };
+      try {
+        var maybe = sound.ctx.decodeAudioData(x.response, done, function () { });
+        if (maybe && typeof maybe.then === 'function') { maybe.then(done); }
+      } catch (e) { }
+    };
+    x.send();
+  }
+
+  function armSound() {
+    var ctx = audioCtx();
+    if (!ctx) { return; }
+    if (ctx.state === 'suspended' && ctx.resume) {
+      try { ctx.resume(); } catch (e) { }
+    }
+    if (!sound.loaded) {
+      sound.loaded = true;
+      loadClip('tick');
+      loadClip('tock');
+    }
+  }
+
+  function playTick(second) {
+    if (!sound.on || !sound.ctx || document.hidden === true) { return; }
+    var buf = sound.buffers[(second % 2 === 0) ? 'tick' : 'tock'];
+    if (!buf) { return; }
+    try {
+      var src = sound.ctx.createBufferSource();
+      var gain = sound.ctx.createGain();
+      src.buffer = buf;
+      gain.gain.value = sound.volume;
+      src.connect(gain);
+      gain.connect(sound.ctx.destination);
+      if (src.start) { src.start(0); }
+      else if (src.noteOn) { src.noteOn(0); }
+    } catch (e) { }
   }
 
   /* -------------------------------------------------------------
@@ -554,6 +625,7 @@
   startNotes();
   startDrift();
   startKeepAwake();
+  armSound();
 
   setTimeout(function () { tick(true); }, 400);
   loop();
@@ -569,8 +641,12 @@
   window.addEventListener('resize', onResize, false);
   window.addEventListener('orientationchange', onResize, false);
 
+  document.addEventListener('touchstart', armSound, false);
+  document.addEventListener('mousedown', armSound, false);
+  document.addEventListener('click', armSound, false);
+
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden !== true) { tick(true); applyDim(); }
+    if (document.hidden !== true) { tick(true); armSound(); applyDim(); }
   }, false);
 
   /* A hidden tab throttles timers; when it comes back, re-sync instantly. */
