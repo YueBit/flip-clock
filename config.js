@@ -20,7 +20,7 @@ var CLOCK_CONFIG = {
 
   // ---- weather (Open-Meteo, no account or key needed) ----
   // Change the city to yours. If the name is not found, use lat/lon instead.
-  city: 'Shanghai',
+  city: 'Hangzhou',
   lat: null,          // e.g. 31.2304 — overrides city when both are set
   lon: null,          // e.g. 121.4737
   units: 'celsius',   // 'celsius' | 'fahrenheit'

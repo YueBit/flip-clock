@@ -33,7 +33,7 @@ Everything lives in `config.js`. The lines you are most likely to touch:
 
 | Key | What it does |
 | --- | --- |
-| `city: 'Shanghai'` | **Change this to your city.** Weather is looked up by name (Open-Meteo, no key). If the name is ambiguous, set `lat`/`lon` instead. |
+| `city: 'Hangzhou'` | **Change this to your city.** Weather is looked up by name (Open-Meteo, no key). If the name is ambiguous, set `lat`/`lon` instead. |
 | `theme: 'dark'` | `'dark'` is warm charcoal and cream; `'light'` is paper and ink. |
 | `hour12: false` | `true` gives a 12-hour clock with a small AM/PM. |
 | `notes: []` | The line under the date. Give it any number of strings and it rotates through them; leave `[]` for the built-in Robodiag lines. |
