@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <rect width="180" height="180" rx="40" fill="#141210"/>
+  <rect x="40" y="44" width="100" height="92" rx="12" fill="#2b2722"/>
+  <rect x="40" y="44" width="100" height="46" rx="12" fill="#332e28"/>
+  <rect x="40" y="89" width="100" height="2" fill="#0b0a09"/>
+  <rect x="40" y="44" width="100" height="1" fill="#4a433a" opacity=".7"/>
+  <text x="90" y="118" text-anchor="middle" font-family="Didot, Baskerville, Georgia, serif" font-size="58" fill="#f4ecdd">12</text>
+</svg>

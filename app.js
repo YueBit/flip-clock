@@ -1,0 +1,580 @@
+/* ---------------------------------------------------------------
+   Robodiag flip clock — ES5 only, so an iPad stuck on iOS 9 still
+   runs every line of it. No fetch(), no arrows, no template strings.
+   --------------------------------------------------------------- */
+
+(function () {
+  'use strict';
+
+  var CFG = window.CLOCK_CONFIG || {};
+
+  function pick(key, fallback) {
+    var v = CFG[key];
+    return (v === undefined || v === null) ? fallback : v;
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function el(id) { return document.getElementById(id); }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function show(node, on) {
+    if (!node) { return; }
+    if (on) { node.removeAttribute('hidden'); }
+    else { node.setAttribute('hidden', 'hidden'); }
+  }
+
+  /* -------------------------------------------------------------
+     Language
+     ------------------------------------------------------------- */
+
+  var lang = String(pick('lang', 'auto')).toLowerCase();
+  if (lang === 'auto') {
+    var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    lang = nav.indexOf('zh') === 0 ? 'zh' : 'en';
+  }
+  if (lang !== 'zh' && lang !== 'en') { lang = 'en'; }
+
+  var L = {
+    zh: {
+      weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+      date: function (d) {
+        return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+          this.weekdays[d.getDay()];
+      },
+      sentences: ['机器人诊断基础设施', '让每台机器人都拥有可靠的开始'],
+      weatherError: ''
+    },
+    en: {
+      weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      months: ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+        'August', 'September', 'October', 'November', 'December'],
+      date: function (d) {
+        return this.weekdays[d.getDay()] + ', ' + d.getDate() + ' ' +
+          this.months[d.getMonth()] + ' ' + d.getFullYear();
+      },
+      sentences: ['Diagnostic infrastructure for every robot',
+        'Every robot deserves a reliable start'],
+      weatherError: ''
+    }
+  }[lang];
+
+  /* -------------------------------------------------------------
+     Weather codes (WMO). [icon, zh, en]
+     ------------------------------------------------------------- */
+
+  var WMO = {
+    0: ['clear', '晴', 'Clear'],
+    1: ['mostlysunny', '大致晴朗', 'Mainly clear'],
+    2: ['partly', '多云', 'Partly cloudy'],
+    3: ['cloudy', '阴', 'Overcast'],
+    45: ['fog', '有雾', 'Fog'],
+    48: ['fog', '冻雾', 'Freezing fog'],
+    51: ['drizzle', '细微雨', 'Light drizzle'],
+    53: ['drizzle', '毛毛雨', 'Drizzle'],
+    55: ['drizzle', '细雨', 'Dense drizzle'],
+    56: ['drizzle', '冻毛毛雨', 'Freezing drizzle'],
+    57: ['drizzle', '冻雨', 'Freezing drizzle'],
+    61: ['rain', '小雨', 'Light rain'],
+    63: ['rain', '中雨', 'Rain'],
+    65: ['rain', '大雨', 'Heavy rain'],
+    66: ['rain', '冻雨', 'Freezing rain'],
+    67: ['rain', '冻雨', 'Freezing rain'],
+    71: ['snow', '小雪', 'Light snow'],
+    73: ['snow', '中雪', 'Snow'],
+    75: ['snow', '大雪', 'Heavy snow'],
+    77: ['snow', '霰', 'Snow grains'],
+    80: ['rain', '阵雨', 'Light showers'],
+    81: ['rain', '阵雨', 'Showers'],
+    82: ['rain', '强阵雨', 'Violent showers'],
+    85: ['snow', '阵雪', 'Snow showers'],
+    86: ['snow', '强阵雪', 'Heavy snow showers'],
+    95: ['thunder', '雷阵雨', 'Thunderstorm'],
+    96: ['thunder', '雷阵雨伴冰雹', 'Thunderstorm, hail'],
+    99: ['thunder', '强雷暴伴冰雹', 'Thunderstorm, hail']
+  };
+
+  /* -------------------------------------------------------------
+     Inline icons — thin monochrome line art, no external requests
+     ------------------------------------------------------------- */
+
+  var CLOUD = 'M7 15.6h9.4a3.6 3.6 0 0 0 .2-7.2A5.4 5.4 0 0 0 6.3 7.2 3.7 3.7 0 0 0 7 15.6z';
+  var CLOUD_LOW = 'M8.2 19.4h9.2a3.5 3.5 0 0 0 .2-7A5.3 5.3 0 0 0 7.5 11.2 3.6 3.6 0 0 0 8.2 19.4z';
+
+  var ICON = {
+    clear: '<circle cx="12" cy="12" r="4.3"/><path d="M12 2.4v2.1M12 19.5v2.1M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M2.4 12h2.1M19.5 12h2.1M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/>',
+    moon: '<path d="M20.4 14.7A8.5 8.5 0 0 1 9.3 3.6a8.6 8.6 0 1 0 11.1 11.1z"/>',
+    mostlysunny: '<circle cx="8.8" cy="7.8" r="2.7"/><path d="M8.8 2.9v1.4M4.6 4l1 1M3.2 7.8h1.4"/><path d="' + CLOUD_LOW + '"/>',
+    partly: '<circle cx="9" cy="8.4" r="3"/><path d="M9 3.4v1.3M4.9 4.3l.9.9M4 8.4h1.3"/><path d="M9.2 19.4h8.8a3.5 3.5 0 0 0 .2-7 5.3 5.3 0 0 0-10-1.2 3.6 3.6 0 0 0 1 8.2z"/>',
+    cloudy: '<path d="M8.6 18.6h8.6a3.4 3.4 0 0 0 .2-6.8A5.1 5.1 0 0 0 7.7 10.7a3.5 3.5 0 0 0 .9 7.9z"/><path d="M5.8 13.2a4 4 0 0 1 3.2-4.6"/><path d="M4.6 17.8a4 4 0 0 1 1.2-6.4"/>',
+    fog: '<path d="M4.4 8.6h15.2M6.6 12.4h10.8M4.4 16.2h15.2M7.4 20h9.2"/>',
+    drizzle: '<path d="' + CLOUD + '"/><path d="M9.6 18.2v2M13 18.2v2"/>',
+    rain: '<path d="' + CLOUD + '"/><path d="M8.6 18v2.6M12 18v2.6M15.4 18v2.6"/>',
+    showers: '<path d="' + CLOUD + '"/><path d="M8.6 18l-1 2.6M12 18l-.8 2.6M15.4 18l-1 2.6"/>',
+    snow: '<path d="' + CLOUD + '"/><circle cx="8.8" cy="19.4" r="0.85" fill="currentColor" stroke="none"/><circle cx="12" cy="20.6" r="0.85" fill="currentColor" stroke="none"/><circle cx="15.2" cy="19.4" r="0.85" fill="currentColor" stroke="none"/>',
+    thunder: '<path d="' + CLOUD + '"/><path d="M12.9 17.2l-2.1 3.4h2.5l-1.3 2.4"/>'
+  };
+
+  function iconSVG(name) {
+    var body = ICON[name] || ICON.cloudy;
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  }
+
+  /* -------------------------------------------------------------
+     Flip digits
+     ------------------------------------------------------------- */
+
+  var clockEl = el('clock');
+  var animate = pick('animate', true) !== false;
+  var showSeconds = pick('showSeconds', true) !== false;
+  var hour12 = pick('hour12', false) === true;
+
+  function makeUnit() {
+    var u = document.createElement('div');
+    u.className = 'unit';
+    u.innerHTML =
+      '<div class="facet top"><span>0</span></div>' +
+      '<div class="facet bot"><span>0</span></div>' +
+      '<div class="facet leaf-top"><span>0</span></div>' +
+      '<div class="facet leaf-bot"><span>0</span></div>' +
+      '<div class="seam"></div>';
+    return {
+      el: u,
+      top: u.getElementsByTagName('span')[0],
+      bot: u.getElementsByTagName('span')[1],
+      ltop: u.getElementsByTagName('span')[2],
+      lbot: u.getElementsByTagName('span')[3],
+      ltopEl: u.getElementsByTagName('div')[2],
+      lbotEl: u.getElementsByTagName('div')[3],
+      facets: u.getElementsByTagName('div'),
+      cur: '',
+      busy: false,
+      timer: null
+    };
+  }
+
+  function settle(u) {
+    if (u.timer) { clearTimeout(u.timer); u.timer = null; }
+    u.top.textContent = u.cur;
+    u.bot.textContent = u.cur;
+    u.ltopEl.className = 'facet leaf-top';
+    u.lbotEl.className = 'facet leaf-bot';
+    u.busy = false;
+  }
+
+  function setUnit(u, value) {
+    if (u.cur === value) { return; }
+    if (u.busy) { settle(u); }
+
+    var prev = u.cur;
+    u.cur = value;
+
+    if (!animate || prev === '') {
+      u.top.textContent = value;
+      u.bot.textContent = value;
+      return;
+    }
+
+    /* New digits go in behind the leaves; the old top falls away while the
+       new bottom swings up. All in one task, so no frame sees a wrong face. */
+    u.ltop.textContent = prev;
+    u.lbot.textContent = value;
+    u.top.textContent = value;
+    u.ltopEl.className = 'facet leaf-top flip';
+    u.lbotEl.className = 'facet leaf-bot flip';
+    u.busy = true;
+    u.timer = setTimeout(function () {
+      u.top.textContent = value;
+      u.bot.textContent = value;
+      u.ltopEl.className = 'facet leaf-top';
+      u.lbotEl.className = 'facet leaf-bot';
+      u.busy = false;
+      u.timer = null;
+    }, 620);
+  }
+
+  var units = { h1: makeUnit(), h2: makeUnit(), m1: makeUnit(), m2: makeUnit() };
+
+  clockEl.appendChild(units.h1.el);
+  clockEl.appendChild(units.h2.el);
+
+  var colon = document.createElement('span');
+  colon.className = 'colon';
+  colon.innerHTML = '<i></i><i></i>';
+  clockEl.appendChild(colon);
+
+  clockEl.appendChild(units.m1.el);
+  clockEl.appendChild(units.m2.el);
+
+  var secs = document.createElement('span');
+  secs.className = 'secs';
+  units.s1u = makeUnit();
+  units.s2u = makeUnit();
+  secs.appendChild(units.s1u.el);
+  secs.appendChild(units.s2u.el);
+
+  var periodEl = document.createElement('span');
+  periodEl.className = 'period';
+  periodEl.textContent = '';
+
+  if (hour12) { clockEl.appendChild(periodEl); }
+  if (showSeconds) { clockEl.appendChild(secs); }
+
+  /* -------------------------------------------------------------
+     Sizing — computed in px so no viewport-unit quirks on old iOS
+     ------------------------------------------------------------- */
+
+  function sizeUnit(u, h) {
+    var w = h * 0.66;
+    var fs = Math.round(h * 0.76);
+    var r = Math.max(3, Math.round(h * 0.075));
+    var spans, i;
+
+    u.el.style.width = w + 'px';
+    u.el.style.height = h + 'px';
+    u.el.style.margin = '0 ' + (h * 0.016) + 'px';
+
+    spans = u.el.getElementsByTagName('span');
+    for (i = 0; i < spans.length; i++) {
+      spans[i].style.fontSize = fs + 'px';
+      spans[i].style.height = h + 'px';
+      spans[i].style.lineHeight = h + 'px';
+      // bottom-facing facets show the lower half of the same glyph
+      spans[i].style.marginTop = (i === 1 || i === 3) ? (-h / 2) + 'px' : '0';
+    }
+
+    for (i = 0; i < 4; i++) {
+      u.facets[i].style.borderRadius = (i === 0 || i === 2)
+        ? r + 'px ' + r + 'px 0 0'
+        : '0 0 ' + r + 'px ' + r + 'px';
+    }
+  }
+
+  function layout() {
+    var W = document.documentElement.clientWidth || window.innerWidth;
+    var H = document.documentElement.clientHeight || window.innerHeight;
+    var ratio = showSeconds ? 3.85 : 3.1;
+    var h = Math.min(W * 0.92 / ratio, H * 0.44);
+    if (h < 64) { h = 64; }
+
+    var big = [units.h1, units.h2, units.m1, units.m2];
+    var i;
+
+    for (i = 0; i < big.length; i++) { sizeUnit(big[i], h); }
+    if (showSeconds) {
+      sizeUnit(units.s1u, h * 0.42);
+      sizeUnit(units.s2u, h * 0.42);
+      secs.style.marginLeft = (h * 0.13) + 'px';
+    }
+
+    var dot = Math.max(4, Math.round(h * 0.062));
+    var dots = colon.getElementsByTagName('i');
+    colon.style.width = Math.round(h * 0.22) + 'px';
+    colon.style.height = Math.round(h) + 'px';
+    for (i = 0; i < dots.length; i++) {
+      dots[i].style.width = dot + 'px';
+      dots[i].style.height = dot + 'px';
+      dots[i].style.marginLeft = (-dot / 2) + 'px';
+      dots[i].style.top = Math.round(h * (i === 0 ? 0.3 : 0.56)) + 'px';
+    }
+
+    var dateEl = el('date');
+    var ruleEl = el('rule');
+    var metaEl = document.querySelector('.meta');
+
+    dateEl.style.fontSize = Math.round(h * 0.135) + 'px';
+    dateEl.style.marginTop = Math.round(h * 0.17) + 'px';
+    ruleEl.style.width = Math.round(h * 0.5) + 'px';
+    ruleEl.style.marginTop = Math.round(h * 0.11) + 'px';
+    metaEl.style.fontSize = Math.max(11, Math.round(h * 0.062)) + 'px';
+    metaEl.style.marginTop = Math.round(h * 0.105) + 'px';
+
+    if (hour12) {
+      periodEl.style.fontSize = Math.max(10, Math.round(h * 0.075)) + 'px';
+      periodEl.style.marginLeft = Math.round(h * 0.05) + 'px';
+      periodEl.style.marginBottom = Math.round(h * 0.045) + 'px';
+    }
+  }
+
+  /* -------------------------------------------------------------
+     The tick
+     ------------------------------------------------------------- */
+
+  var lastMinute = -1;
+
+  function tick(fresh) {
+    var d = new Date();
+    var hh = d.getHours();
+    var period = '';
+
+    if (hour12) {
+      period = hh < 12 ? 'AM' : 'PM';
+      hh = hh % 12;
+      if (hh === 0) { hh = 12; }
+    }
+
+    var hs = pad(hh), ms = pad(d.getMinutes()), ss = pad(d.getSeconds());
+
+    setUnit(units.h1, hs.charAt(0));
+    setUnit(units.h2, hs.charAt(1));
+    setUnit(units.m1, ms.charAt(0));
+    setUnit(units.m2, ms.charAt(1));
+    if (showSeconds) {
+      setUnit(units.s1u, ss.charAt(0));
+      setUnit(units.s2u, ss.charAt(1));
+    }
+    if (hour12 && periodEl.textContent !== period) { periodEl.textContent = period; }
+
+    // the colon breathes with the seconds
+    var odd = d.getSeconds() % 2 === 0;
+    colon.className = odd ? 'colon' : 'colon off';
+
+    var minute = d.getHours() * 60 + d.getMinutes();
+    if (minute !== lastMinute || fresh) {
+      lastMinute = minute;
+      el('date').textContent = L.date(d);
+      el('sr').textContent = hs + ':' + ms + ', ' + L.date(d);
+      clockEl.setAttribute('aria-label', hs + ':' + ms);
+      document.title = hs + ':' + ms;
+    }
+  }
+
+  function loop() {
+    tick(false);
+    var ms = new Date().getMilliseconds();
+    var wait = 1000 - ms + 20;
+    setTimeout(loop, wait < 100 ? wait + 1000 : wait);
+  }
+
+  /* -------------------------------------------------------------
+     Weather — Open-Meteo, keyless, CORS-friendly
+     ------------------------------------------------------------- */
+
+  var GEO_KEY = 'flipclock.city';
+  var haveWeather = false;
+
+  function getJSON(url, ok, fail) {
+    var x = new XMLHttpRequest();
+    var done = false;
+    function finish(fn, arg) {
+      if (done) { return; }
+      done = true;
+      fn(arg);
+    }
+    try {
+      x.open('GET', url, true);
+      x.onload = function () {
+        if (x.status >= 200 && x.status < 300) {
+          var data;
+          try { data = JSON.parse(x.responseText); } catch (e) { return finish(fail); }
+          finish(ok, data);
+        } else {
+          finish(fail);
+        }
+      };
+      x.onerror = function () { finish(fail); };
+      x.timeout = 12000;
+      x.ontimeout = function () { finish(fail); };
+      x.send();
+    } catch (e) {
+      finish(fail);
+    }
+  }
+
+  function showWeather(temp, code, isDay) {
+    var row = WMO[code] || WMO[3];
+    var icon = row[0];
+    if (icon === 'clear' && !isDay) { icon = 'moon'; }
+    if (icon === 'mostlysunny' && !isDay) { icon = 'moon'; }
+    if (icon === 'partly' && !isDay) { icon = 'moon'; }
+
+    el('wicon').innerHTML = iconSVG(icon);
+    el('wtemp').textContent = Math.round(temp) + '°';
+    el('wdesc').textContent = lang === 'zh' ? row[1] : row[2];
+    show(el('weather'), true);
+    show(el('sep'), !!el('note').textContent);
+    haveWeather = true;
+  }
+
+  var wxRetry = null, geoRetry = null, weatherStarted = false;
+
+  function retryWeather(lat, lon) {
+    if (wxRetry) { return; }
+    wxRetry = setTimeout(function () { wxRetry = null; loadWeather(lat, lon); }, 60000);
+  }
+
+  function loadWeather(lat, lon) {
+    var unitParam = (pick('units', 'celsius') === 'fahrenheit') ? '&temperature_unit=fahrenheit' : '';
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+      '&current=temperature_2m,weather_code,is_day&timezone=auto' + unitParam;
+    getJSON(url, function (data) {
+      if (!data || !data.current) { retryWeather(lat, lon); return; }
+      showWeather(num(data.current.temperature_2m), data.current.weather_code, num(data.current.is_day) !== 0);
+    }, function () { retryWeather(lat, lon); });
+  }
+
+  function cachedCity(name, ok, fail) {
+    var raw = null, parsed = null;
+    try { raw = window.localStorage.getItem(GEO_KEY); } catch (e) { raw = null; }
+    if (raw) {
+      try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+      if (parsed && parsed.name === name &&
+          Math.abs((new Date()).getTime() - parsed.t) < 30 * 86400000) {
+        return ok(parsed.lat, parsed.lon);
+      }
+    }
+    getJSON('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(name) +
+      '&count=1&language=' + (lang === 'zh' ? 'zh' : 'en') + '&format=json', function (data) {
+        if (!data || !data.results || !data.results.length) { fail(); return; }
+        var r = data.results[0];
+        try {
+          window.localStorage.setItem(GEO_KEY, JSON.stringify({
+            name: name, lat: r.latitude, lon: r.longitude, t: (new Date()).getTime()
+          }));
+        } catch (e) { /* private mode */ }
+        ok(r.latitude, r.longitude);
+      }, fail);
+  }
+
+  function refreshWeather() {
+    var lat = pick('lat', null), lon = pick('lon', null), city = pick('city', '');
+    if (lat && lon) { loadWeather(parseFloat(lat), parseFloat(lon)); return; }
+    if (!city) {
+      show(el('weather'), false);
+      show(el('sep'), false);
+      return;
+    }
+    cachedCity(String(city), function (la, lo) { loadWeather(la, lo); }, function () {
+      // network hiccup or rate limit: try again in five minutes, quietly
+      if (geoRetry) { return; }
+      geoRetry = setTimeout(function () { geoRetry = null; refreshWeather(); }, 300000);
+    });
+  }
+
+  function startWeather() {
+    if (weatherStarted) { return; }
+    weatherStarted = true;
+    refreshWeather();
+    setInterval(refreshWeather, Math.max(2, num(pick('weatherEvery', 15))) * 60000);
+  }
+
+  /* -------------------------------------------------------------
+     The rotating note
+     ------------------------------------------------------------- */
+
+  function startNotes() {
+    var notes = pick('notes', null);
+    if (!notes || !notes.length) { notes = L.sentences; }
+    var noteEl = el('note');
+    var i = 0;
+
+    function paint(first) {
+      if (first) {
+        noteEl.textContent = notes[0];
+        noteEl.style.opacity = '1';
+      } else {
+        noteEl.style.opacity = '0';
+        setTimeout(function () {
+          noteEl.textContent = notes[i % notes.length];
+          noteEl.style.opacity = '1';
+        }, 1200);
+      }
+      show(el('sep'), !!(haveWeather && noteEl.textContent));
+    }
+
+    paint(true);
+
+    if (notes.length > 1) {
+      var mins = Math.max(1, num(pick('noteEvery', 30)));
+      setInterval(function () {
+        i = (i + 1) % notes.length;
+        paint(false);
+      }, mins * 60000);
+    }
+  }
+
+  /* -------------------------------------------------------------
+     Night dim, drift, on-screen wake
+     ------------------------------------------------------------- */
+
+  function applyDim() {
+    var dim = el('dim');
+    var amount = num(pick('nightDim', 0.7));
+    var start = num(pick('nightStart', 23));
+    var end = num(pick('nightEnd', 7));
+    var h = (new Date()).getHours();
+    var on;
+
+    if (!amount) { dim.style.opacity = '0'; return; }
+    on = (start <= end) ? (h >= start && h < end) : (h >= start || h < end);
+    dim.style.opacity = on ? String(amount) : '0';
+  }
+
+  function startDrift() {
+    if (pick('drift', true) === false) { return; }
+    var wrap = el('wrap');
+    var steps = [[3, -2], [-4, 3], [2, 4], [-3, -3], [4, 1], [-2, -4]];
+    var n = 0;
+    setInterval(function () {
+      var s = steps[n % steps.length];
+      n++;
+      wrap.style.webkitTransform = 'translate3d(' + s[0] + 'px,' + s[1] + 'px,0)';
+      wrap.style.transform = 'translate3d(' + s[0] + 'px,' + s[1] + 'px,0)';
+    }, 4 * 60000);
+  }
+
+  function startKeepAwake() {
+    if (pick('keepAwake', true) === false) { return; }
+    var v = el('awake');
+    if (!v) { return; }
+
+    function play() {
+      try {
+        var p = v.play();
+        if (p && typeof p.catch === 'function') { p.catch(function () { }); }
+      } catch (e) { }
+    }
+
+    play();
+    v.addEventListener('loadeddata', play, false);
+    document.addEventListener('touchstart', play, false);
+    document.addEventListener('click', play, false);
+    setInterval(play, 5 * 60000);
+  }
+
+  /* -------------------------------------------------------------
+     Boot
+     ------------------------------------------------------------- */
+
+  document.body.className = 'theme-' + (pick('theme', 'dark') === 'light' ? 'light' : 'dark') +
+    ' lang-' + lang;
+
+  layout();
+  tick(true);
+  applyDim();
+  startWeather();
+  startNotes();
+  startDrift();
+  startKeepAwake();
+
+  setTimeout(function () { tick(true); }, 400);
+  loop();
+
+  setInterval(applyDim, 60000);
+  setTimeout(function () { applyDim(); }, 3000);
+
+  var resizeTimer = null;
+  function onResize() {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () { layout(); tick(true); }, 250);
+  }
+  window.addEventListener('resize', onResize, false);
+  window.addEventListener('orientationchange', onResize, false);
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden !== true) { tick(true); applyDim(); }
+  }, false);
+
+  /* A hidden tab throttles timers; when it comes back, re-sync instantly. */
+  window.addEventListener('pageshow', function () { tick(true); }, false);
+  window.addEventListener('focus', function () { tick(true); }, false);
+
+})();

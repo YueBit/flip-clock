@@ -1,0 +1,387 @@
+/* ---------------------------------------------------------------
+   Robodiag flip clock
+   Written for old Safari: no CSS custom properties, no grid, no
+   clip-path, everything 3D carries a -webkit- prefix.
+   --------------------------------------------------------------- */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #121110;
+}
+
+body {
+  position: relative;
+  color: #cfc6b8;
+  font-family: "Avenir Next", "Avenir", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  background-image: -webkit-radial-gradient(50% 38%, #1e1a17 0%, #141210 58%, #0c0b0a 100%);
+  background-image: radial-gradient(ellipse at 50% 38%, #1e1a17 0%, #141210 58%, #0c0b0a 100%);
+}
+
+/* ---------------------------------------------------------------
+   Layout shell — table-cell centring is the one vertical-centring
+   technique every WebKit since iOS 4 gets right.
+   --------------------------------------------------------------- */
+
+.board {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+
+.board-inner {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.wrap {
+  padding: 0 4%;
+  -webkit-transition: -webkit-transform 3s ease-in-out;
+  transition: transform 3s ease-in-out;
+}
+
+/* ---------------------------------------------------------------
+   The clock
+   --------------------------------------------------------------- */
+
+.clock {
+  font-size: 0;            /* kills inline-block whitespace */
+  line-height: 0;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.unit {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  background: #1a1815;
+  -webkit-perspective: 1400px;
+  perspective: 1400px;
+  -webkit-perspective-origin: 50% 50%;
+  perspective-origin: 50% 50%;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.facet {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.facet.top, .facet.leaf-top {
+  top: 0;
+  height: 50%;
+  -webkit-transform-origin: 50% 100%;
+  transform-origin: 50% 100%;
+}
+
+.facet.bot, .facet.leaf-bot {
+  bottom: 0;
+  height: 50%;
+  -webkit-transform-origin: 50% 0%;
+  transform-origin: 50% 0%;
+}
+
+.facet.top, .facet.leaf-top {
+  background-image: -webkit-linear-gradient(top, #2b2722 0%, #201d19 100%);
+  background-image: linear-gradient(to bottom, #2b2722 0%, #201d19 100%);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  z-index: 1;
+}
+
+.facet.bot, .facet.leaf-bot {
+  background-image: -webkit-linear-gradient(top, #221f1b 0%, #171512 100%);
+  background-image: linear-gradient(to bottom, #221f1b 0%, #171512 100%);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55);
+  z-index: 1;
+}
+
+.facet span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: #f4ecdd;
+  font-family: "Didot", "Baskerville", "Hoefler Text", "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* the two leaves that move */
+.facet.leaf-top {
+  -webkit-transform: rotateX(-90deg);
+  transform: rotateX(-90deg);
+  z-index: 3;
+}
+
+.facet.leaf-bot {
+  -webkit-transform: rotateX(90deg);
+  transform: rotateX(90deg);
+  z-index: 3;
+}
+
+@-webkit-keyframes flipTop {
+  from { -webkit-transform: rotateX(0deg); }
+  to   { -webkit-transform: rotateX(-90deg); }
+}
+@keyframes flipTop {
+  from { transform: rotateX(0deg); }
+  to   { transform: rotateX(-90deg); }
+}
+@-webkit-keyframes flipBot {
+  from { -webkit-transform: rotateX(90deg); }
+  to   { -webkit-transform: rotateX(0deg); }
+}
+@keyframes flipBot {
+  from { transform: rotateX(90deg); }
+  to   { transform: rotateX(0deg); }
+}
+
+.leaf-top.flip {
+  -webkit-animation: flipTop 0.3s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+  animation: flipTop 0.3s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+}
+
+.leaf-bot.flip {
+  -webkit-animation: flipBot 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards;
+  animation: flipBot 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards;
+}
+
+/* the hairline where the two halves meet */
+.seam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 4;
+}
+
+.facet.bot:after,
+.facet.leaf-bot:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 16%;
+  background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0));
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0));
+  pointer-events: none;
+}
+
+body.theme-light .facet.bot:after,
+body.theme-light .facet.leaf-bot:after {
+  background-image: -webkit-linear-gradient(top, rgba(90, 74, 48, 0.16), rgba(90, 74, 48, 0));
+  background-image: linear-gradient(to bottom, rgba(90, 74, 48, 0.16), rgba(90, 74, 48, 0));
+}
+
+/* colon */
+.colon {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  font-size: 0;
+}
+
+.secs {
+  display: inline-block;
+  vertical-align: bottom;
+  font-size: 0;
+}
+
+.colon i {
+  position: absolute;
+  display: block;
+  left: 50%;
+  background: #8d8477;
+  border-radius: 50%;
+  -webkit-transition: opacity 0.6s ease;
+  transition: opacity 0.6s ease;
+}
+
+.colon.off i { opacity: 0.3; }
+
+/* AM / PM */
+.period {
+  display: inline-block;
+  vertical-align: bottom;
+  color: #8d8477;
+  font-family: "Avenir Next", "Avenir", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------
+   Date + info line
+   --------------------------------------------------------------- */
+
+.date {
+  color: #ded4c3;
+  font-family: "Didot", "Baskerville", "Hoefler Text", Georgia, "Songti SC", "STSong", serif;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.rule {
+  height: 1px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.meta {
+  color: #928a7d;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.weather {
+  display: inline-block;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.wicon {
+  display: inline-block;
+  vertical-align: -0.18em;
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.35em;
+}
+
+.wicon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.wtemp { margin-right: 0.35em; }
+.wdesc {
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+.sep {
+  display: inline-block;
+  margin: 0 0.9em;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.note {
+  display: inline-block;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0.08em;
+  -webkit-transition: opacity 1.2s ease;
+  transition: opacity 1.2s ease;
+}
+
+/* ---------------------------------------------------------------
+   Night dim + the invisible keep-awake video
+   --------------------------------------------------------------- */
+
+#dim {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transition: opacity 4s ease;
+  transition: opacity 4s ease;
+  z-index: 20;
+}
+
+.awake {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  height: 2px;
+  opacity: 0.01;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------
+   Light theme
+   --------------------------------------------------------------- */
+
+body.theme-light {
+  color: #6d6558;
+  background: #efe9dd;
+  background-image: -webkit-radial-gradient(50% 38%, #faf6ee 0%, #efe9dd 60%, #e3dccd 100%);
+  background-image: radial-gradient(ellipse at 50% 38%, #faf6ee 0%, #efe9dd 60%, #e3dccd 100%);
+}
+
+body.theme-light .unit {
+  background: #efe9dd;
+  box-shadow: 0 18px 38px rgba(70, 58, 40, 0.16), 0 1px 2px rgba(70, 58, 40, 0.14);
+}
+
+body.theme-light .facet.top,
+body.theme-light .facet.leaf-top {
+  background-image: -webkit-linear-gradient(top, #fffdf8 0%, #f2ebdf 100%);
+  background-image: linear-gradient(to bottom, #fffdf8 0%, #f2ebdf 100%);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+body.theme-light .facet.bot,
+body.theme-light .facet.leaf-bot {
+  background-image: -webkit-linear-gradient(top, #ece4d6 0%, #e0d7c6 100%);
+  background-image: linear-gradient(to bottom, #ece4d6 0%, #e0d7c6 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body.theme-light .facet span {
+  color: #23201b;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.theme-light .seam {
+  background: rgba(120, 105, 82, 0.28);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.theme-light .colon i { background: #a99d87; }
+
+body.lang-zh .meta { letter-spacing: 0.1em; }
+body.lang-zh .wdesc { letter-spacing: 0.04em; }
+body.lang-zh .date { letter-spacing: 0.04em; }
+body.theme-light .date { color: #2c2721; text-shadow: none; }
+body.theme-light .rule { background: rgba(70, 58, 40, 0.16); }
+body.theme-light .meta { color: #837866; }
+body.theme-light .sep { color: rgba(70, 58, 40, 0.3); }
+body.theme-light .period { color: #837866; }
