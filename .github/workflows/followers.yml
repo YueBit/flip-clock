@@ -9,6 +9,12 @@ name: Bilibili followers
 on:
   schedule:
     - cron: '17,47 * * * *'
+  # Editing the job or the fetcher re-runs it, which is also how the permissions
+  # below get tested without waiting for a scheduled slot.
+  push:
+    paths:
+      - '.github/workflows/followers.yml'
+      - 'tools/followers.py'
   workflow_dispatch:
 
 permissions:
