@@ -40,7 +40,7 @@ Everything lives in `config.js`. The lines you are most likely to touch:
 | `theme: 'dark'` | `'dark'` is warm charcoal and cream; `'light'` is paper and ink. |
 | `hour12: false` | `true` gives a 12-hour clock with a small AM/PM. |
 | `notes: []` | The line under the date. `[]` shows nothing at all; give it strings and it rotates through them every `noteEvery` minutes. |
-| `tickSound: true` | Tick and tock on every second. `tickVolume` sets the level (0 mutes it). iOS needs one tap on the page before audio may start, and the hardware mute switch silences it. |
+| `tickSound: true` | Tick and tock on every second, 0.45 by default (`tickVolume`, 0 mutes it). iOS needs one tap on the page before audio may start, and the hardware mute switch silences it. |
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the screen fades to `nightDim` (0.55) brightness. Set `nightDim: 0` to turn it off. |
 | `showSeconds` | Hide the small seconds pair for a calmer board. |
 | `animate: false` | Turns the flip into a plain cut. Only needed if a very old iPad stutters. |
@@ -52,7 +52,9 @@ Everything lives in `config.js`. The lines you are most likely to touch:
 2. **Share → Add to Home Screen.** Launching from that icon hides Safari's
    toolbars.
 3. **Tap the screen once.** iOS only allows sound (and the silent video) after a
-   touch; a single tap arms both for as long as the page stays open.
+   touch; a single tap arms both for as long as the page stays open. Until you
+   do, a dim line at the bottom says "Tap the screen for sound" — it disappears
+   for good on the first tap.
 4. **Settings → Display & Brightness → Auto-Lock → Never.** This is the part
    that keeps the screen lit; a web page on its own is not allowed to override
    it. The silent `keep-awake.mp4` loops in the background and does stop the

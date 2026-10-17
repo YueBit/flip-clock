@@ -33,7 +33,7 @@ var CLOCK_CONFIG = {
 
   // ---- tick / tock on every second ----
   tickSound: true,
-  tickVolume: 0.35,   // 0 = silent
+  tickVolume: 0.45,   // 0 = silent
 
   // ---- night dimming (screen only; it cannot touch the iPad's brightness) ----
   nightStart: 23,

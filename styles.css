@@ -384,6 +384,27 @@ body.theme-light .facet.leaf-bot:after {
    Night dim + the invisible keep-awake video
    --------------------------------------------------------------- */
 
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  text-align: center;
+  color: #7d7466;
+  font-family: "Rajdhani", "Menlo", monospace;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transition: opacity 1.2s ease;
+  transition: opacity 1.2s ease;
+  z-index: 15;
+}
+
+.hint.show { opacity: 0.85; }
+
 #dim {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;

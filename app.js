@@ -39,7 +39,8 @@
         return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
           this.weekdays[d.getDay()];
       },
-      weatherError: ''
+      weatherError: '',
+      tapHint: '轻触屏幕开启声音'
     },
     en: {
       weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -49,7 +50,8 @@
         return this.weekdays[d.getDay()] + ', ' + d.getDate() + ' ' +
           this.months[d.getMonth()] + ' ' + d.getFullYear();
       },
-      weatherError: ''
+      weatherError: '',
+      tapHint: 'Tap the screen for sound'
     }
   }[lang];
 
@@ -515,12 +517,17 @@
 
   var sound = {
     on: pick('tickSound', true) !== false,
-    volume: Math.min(1, Math.max(0, num(pick('tickVolume', 0.35)))),
+    volume: Math.min(1, Math.max(0, num(pick('tickVolume', 0.45)))),
     ctx: null,
     buffers: {},
-    loaded: false
+    loading: false,
+    ready: false,
+    fallback: null
   };
 
+  /* iOS will not let a page make a sound until the user has touched it, and it
+     wants the context created or resumed inside that touch. So nothing is
+     created at load time unless the browser is already happy to run audio. */
   function audioCtx() {
     if (sound.ctx) { return sound.ctx; }
     var AC = window.AudioContext || window.webkitAudioContext;
@@ -535,42 +542,110 @@
     x.responseType = 'arraybuffer';
     x.onload = function () {
       if (!x.response) { return; }
-      var done = function (buf) { if (buf) { sound.buffers[name] = buf; } };
+      var got = function (buf) { if (buf && buf.duration) { sound.buffers[name] = buf; } };
       try {
-        var maybe = sound.ctx.decodeAudioData(x.response, done, function () { });
-        if (maybe && typeof maybe.then === 'function') { maybe.then(done); }
-      } catch (e) { }
+        var maybe = sound.ctx.decodeAudioData(x.response, got, function () { });
+        if (maybe && typeof maybe.then === 'function') { maybe.then(got); }
+      } catch (e) {
+        // some old builds only decode once the context is running
+        setTimeout(function () { sound.loading = false; loadClips(); }, 800);
+      }
     };
     x.send();
   }
 
+  function loadClips() {
+    if (sound.loading || !sound.ctx) { return; }
+    sound.loading = true;
+    loadClip('tick');
+    loadClip('tock');
+  }
+
+  function confirmTick() {
+    var tries = 0;
+    var iv = setInterval(function () {
+      if (sound.buffers.tick) { playTick(0); clearInterval(iv); }
+      if (++tries > 40) { clearInterval(iv); }
+    }, 100);
+  }
+
+  /* No Web Audio at all: two <audio> elements, primed inside the same gesture. */
+  function fallbackArm() {
+    if (sound.fallback) { return; }
+    try {
+      var a = new Audio('tick.wav?v=1');
+      var b = new Audio('tock.wav?v=1');
+      a.preload = 'auto'; b.preload = 'auto';
+      a.muted = true; a.play(); a.pause(); a.muted = false;
+      b.muted = true; b.play(); b.pause(); b.muted = false;
+      sound.fallback = { tick: a, tock: b };
+      hideHint();
+    } catch (e) { }
+  }
+
   function armSound() {
+    if (!sound.on) { return; }
     var ctx = audioCtx();
-    if (!ctx) { return; }
-    if (ctx.state === 'suspended' && ctx.resume) {
-      try { ctx.resume(); } catch (e) { }
+    if (!ctx) { fallbackArm(); return; }
+
+    function start() {
+      sound.ready = true;
+      loadClips();
+      hideHint();
+      confirmTick();
     }
-    if (!sound.loaded) {
-      sound.loaded = true;
-      loadClip('tick');
-      loadClip('tock');
+
+    if (ctx.state === 'suspended' && ctx.resume) {
+      var p = null;
+      try { p = ctx.resume(); } catch (e) { p = null; }
+      if (p && typeof p.then === 'function') { p.then(start, start); }
+      else { setTimeout(start, 60); }
+    } else if (!sound.ready) {
+      start();
     }
   }
 
   function playTick(second) {
-    if (!sound.on || !sound.ctx || document.hidden === true) { return; }
-    var buf = sound.buffers[(second % 2 === 0) ? 'tick' : 'tock'];
-    if (!buf) { return; }
-    try {
-      var src = sound.ctx.createBufferSource();
-      var gain = sound.ctx.createGain();
-      src.buffer = buf;
-      gain.gain.value = sound.volume;
-      src.connect(gain);
-      gain.connect(sound.ctx.destination);
-      if (src.start) { src.start(0); }
-      else if (src.noteOn) { src.noteOn(0); }
-    } catch (e) { }
+    if (!sound.on || document.hidden === true) { return; }
+    var name = (second % 2 === 0) ? 'tick' : 'tock';
+
+    if (sound.ctx && sound.buffers[name]) {
+      try {
+        var src = sound.ctx.createBufferSource();
+        var gain = sound.ctx.createGain();
+        src.buffer = sound.buffers[name];
+        gain.gain.value = sound.volume;
+        src.connect(gain);
+        gain.connect(sound.ctx.destination);
+        if (src.start) { src.start(0); }
+        else if (src.noteOn) { src.noteOn(0); }
+      } catch (e) { }
+      return;
+    }
+
+    if (sound.fallback && sound.fallback[name]) {
+      try {
+        var a = sound.fallback[name];
+        a.currentTime = 0;
+        a.volume = sound.volume;
+        a.play();
+      } catch (e) { }
+    }
+  }
+
+  /* A line that says so, until the first touch has actually armed audio. */
+  var hintTimer = null;
+  function showHint() {
+    var h = el('hint');
+    if (!h || !sound.on) { return; }
+    h.textContent = L.tapHint;
+    h.className = 'hint show';
+    hintTimer = setTimeout(hideHint, 30000);
+  }
+  function hideHint() {
+    var h = el('hint');
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    if (h) { h.className = 'hint'; }
   }
 
   /* -------------------------------------------------------------
@@ -642,7 +717,7 @@
   startNotes();
   startDrift();
   startKeepAwake();
-  armSound();
+  setTimeout(showHint, 1500);
 
   setTimeout(function () { tick(true); }, 400);
   loop();
