@@ -52,6 +52,7 @@
 <div class="now" id="now">Currently on the clock: <b id="cur">—</b></div>
 <div class="hint">Tell me the number and I'll make it the default.</div>
 
+<script src="config.js"></script>
 <script>
 (function () {
   var buttons = document.querySelectorAll('.row');
@@ -88,7 +89,12 @@
   }
 
   var m = /[?&]sound=([a-z]+)/.exec(location.search);
-  cur.textContent = m ? m[1] : 'flap';
+  var active = m ? m[1]
+    : (window.CLOCK_CONFIG && CLOCK_CONFIG.tickSoundSet) || 'flap';
+  cur.textContent = active;
+  for (var j = 0; j < buttons.length; j++) {
+    if (buttons[j].getAttribute('data-set') === active) { buttons[j].className = 'row on'; }
+  }
 })();
 </script>
 </body>

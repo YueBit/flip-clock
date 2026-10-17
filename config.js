@@ -33,7 +33,7 @@ var CLOCK_CONFIG = {
 
   // ---- tick / tock on every second ----
   tickSound: true,
-  tickSoundSet: 'flap',  // 'flap' | 'wood' | 'sharp' | 'soft' — see soundlab.html
+  tickSoundSet: 'wood',  // 'flap' | 'wood' | 'sharp' | 'soft' — see soundlab.html
   tickVolume: 0.45,      // 0 = silent
 
   // ---- night dimming (screen only; it cannot touch the iPad's brightness) ----
