@@ -387,6 +387,35 @@ body.theme-light .facet.leaf-bot:after {
   color: rgba(255, 255, 255, 0.22);
 }
 
+.followers {
+  display: inline-block;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ficon {
+  display: inline-block;
+  vertical-align: -0.16em;
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.34em;
+}
+
+.ficon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.fcount { letter-spacing: 0.05em; }
+
+.flabel {
+  margin-left: 0.34em;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
 .note {
   display: inline-block;
   vertical-align: middle;

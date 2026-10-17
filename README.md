@@ -18,6 +18,8 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `styles.css` | every card, seam and shadow you see |
 | `app.js` | time, the flip, weather, sound, night dimming |
 | `config.js` | the only file you need to open |
+| `data/followers.json` | Bilibili follower count, refreshed by a GitHub Action |
+| `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
 | `soundlab.html` | tap-to-compare page for choosing a sound |
 | `fonts/` | Rajdhani, cut down to ASCII and shipped as WOFF |
@@ -49,10 +51,33 @@ Open `config.js`. These are the lines worth knowing.
 | `hour12: false` | `true` switches to a 12-hour face with a small AM/PM. |
 | `showSeconds: true` | The small seconds pair beside the minutes. Turn it off for a calmer board. |
 | `notes: []` | The line under the date. Empty means the line does not exist — a slot you have not filled stays empty. Fill it with strings and it rotates through them every `noteEvery` minutes. |
+| `showFollowers: true` | The Bilibili follower count in the line under the date. `followersEvery` sets how often the page re-reads it (15 minutes). |
 | `tickSound: true` | One tick per second, at `tickVolume` (0.45 by default; 0 is silence). `tickSoundSet` chooses the voice. |
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the glass drops to 55% brightness. `nightDim: 0` turns that off. |
 | `animate: false` | Replaces the flip with a plain cut. Only needed if a very old iPad stutters. |
 | `drift: false` | Nudges the layout a few pixels every four minutes, so the panel never holds one image for weeks. Off by default: the redraw it forces can flash the cards on old hardware, and an LCD is not what burns in. |
+
+## Bilibili followers
+
+The line under the date can carry the follower count of a Bilibili account:
+`24° Overcast · 334 followers`. Set `showFollowers: false` to drop it.
+
+It cannot read Bilibili directly. Their API answers **403** to any request
+carrying an `Origin` header, which is every request a browser makes, and there is
+no JSONP endpoint — so from a static page the count is unreachable, no matter how
+the request is written.
+
+Instead `.github/workflows/followers.yml` runs every half hour, reads
+`api.bilibili.com/x/relation/stat` from the runner (server-side, where no CORS
+rule applies), and commits `data/followers.json` — but only when the number has
+actually moved, so a quiet channel leaves no trail of empty commits. The page
+then reads that file from its own origin.
+
+To point it at a different account, change `MID` in `tools/followers.py` (it is
+also the `mid` in the JSON) and delete `data/followers.json` so the next run
+rewrites it. Run the job by hand any time from **Actions → Bilibili followers →
+Run workflow**; if the file never updates, check **Settings → Actions → General
+→ Workflow permissions** is set to *Read and write*.
 
 ## Sound
 

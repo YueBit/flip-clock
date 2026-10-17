@@ -36,6 +36,12 @@ var CLOCK_CONFIG = {
   tickSoundSet: 'wood',  // 'flap' | 'wood' | 'sharp' | 'soft' — see soundlab.html
   tickVolume: 0.45,      // 0 = silent
 
+  // ---- Bilibili follower count ----
+  // Bilibili refuses cross-origin browser reads, so a GitHub Action refreshes
+  // data/followers.json and the page reads its own copy. See the README.
+  showFollowers: true,
+  followersEvery: 15,   // minutes between reads of the file
+
   // ---- night dimming (screen only; it cannot touch the iPad's brightness) ----
   nightStart: 23,
   nightEnd: 7,

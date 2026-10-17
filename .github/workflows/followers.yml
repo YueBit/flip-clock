@@ -1,0 +1,41 @@
+name: Bilibili followers
+
+# Bilibili answers 403 to any request that carries an Origin header, so the page
+# cannot read the count in the browser. This job reads it from the runner (no
+# CORS server-side) and commits the number; the clock then reads its own origin.
+#
+# It only commits when the number moves, so a quiet channel leaves no history.
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bilibili-followers
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the follower count
+        run: python3 tools/followers.py
+
+      - name: Commit when it moved
+        run: |
+          if git diff --quiet -- data/followers.json; then
+            echo "No change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/followers.json
+          count=$(python3 -c 'import json;print(json.load(open("data/followers.json"))["follower"])')
+          git commit -m "Bilibili followers: $count"
+          git push

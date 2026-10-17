@@ -465,8 +465,8 @@
     el('wtemp').textContent = Math.round(temp) + '°';
     el('wdesc').textContent = lang === 'zh' ? row[1] : row[2];
     show(el('weather'), true);
-    show(el('sep'), !!el('note').textContent);
     haveWeather = true;
+    updateSeps();
   }
 
   var wxRetry = null, geoRetry = null, weatherStarted = false;
@@ -514,7 +514,8 @@
     if (lat && lon) { loadWeather(parseFloat(lat), parseFloat(lon)); return; }
     if (!city) {
       show(el('weather'), false);
-      show(el('sep'), false);
+      haveWeather = false;
+      updateSeps();
       return;
     }
     cachedCity(String(city), function (la, lo) { loadWeather(la, lo); }, function () {
@@ -532,6 +533,61 @@
   }
 
   /* -------------------------------------------------------------
+     Bilibili followers
+     Bilibili refuses a browser read of its API (403 on any Origin), so a GitHub
+     Action refreshes data/followers.json and this reads it from our own origin.
+     ------------------------------------------------------------- */
+
+  var haveFollowers = false;
+
+  function biliSVG() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="3" y="7.6" width="18" height="12.4" rx="2.6"/>' +
+      '<path d="M8.1 3.6l3.1 3.4M15.9 3.6l-3.1 3.4"/>' +
+      '<circle cx="8.7" cy="13.7" r="1.05" fill="currentColor" stroke="none"/>' +
+      '<circle cx="15.3" cy="13.7" r="1.05" fill="currentColor" stroke="none"/>' +
+      '</svg>';
+  }
+
+  function shortCount(n) {
+    if (lang === 'zh') {
+      if (n >= 10000) { return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万'; }
+      return String(n);
+    }
+    if (n >= 1000000) { return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'; }
+    if (n >= 10000) { return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'; }
+    return String(n);
+  }
+
+  function showFollowers(n) {
+    el('ficon').innerHTML = biliSVG();
+    el('fcount').textContent = shortCount(n);
+    el('flabel').textContent = lang === 'zh' ? '粉丝' : 'followers';
+    show(el('followers'), true);
+    haveFollowers = true;
+    updateSeps();
+  }
+
+  /* One place decides where the dots go: weather · followers · note, with a dot
+     only between two things that are actually there. */
+  function updateSeps() {
+    var w = haveWeather;
+    var f = haveFollowers;
+    var n = !!el('note').textContent;
+    show(el('sep'), w && f);
+    show(el('sep2'), n && (w || f));
+  }
+
+  function loadFollowers() {
+    if (pick('showFollowers', true) === false) { return; }
+    getJSON('data/followers.json?t=' + (new Date()).getTime(), function (d) {
+      if (d && typeof d.follower === 'number' && d.follower >= 0) { showFollowers(d.follower); }
+    }, function () { /* no file yet, or offline: the line just stays short */ });
+    setTimeout(loadFollowers, Math.max(3, num(pick('followersEvery', 15))) * 60000);
+  }
+
+  /* -------------------------------------------------------------
      The rotating note
      ------------------------------------------------------------- */
 
@@ -542,7 +598,7 @@
 
     if (!notes || !notes.length) {
       noteEl.textContent = '';
-      show(el('sep'), false);
+      updateSeps();
       return;
     }
 
@@ -557,7 +613,7 @@
           noteEl.style.opacity = '1';
         }, 1200);
       }
-      show(el('sep'), !!(haveWeather && noteEl.textContent));
+      updateSeps();
     }
 
     paint(true);
@@ -785,6 +841,7 @@
   tick(true);
   applyDim();
   startWeather();
+  loadFollowers();
   startNotes();
   startDrift();
   startKeepAwake();
