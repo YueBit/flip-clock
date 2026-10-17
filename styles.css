@@ -163,22 +163,75 @@ body {
 }
 @-webkit-keyframes flipBot {
   from { -webkit-transform: rotateX(90deg); opacity: 1; }
+  80%  { -webkit-transform: rotateX(-1.6deg); opacity: 1; }
   to   { -webkit-transform: rotateX(0deg); opacity: 1; }
 }
 @keyframes flipBot {
   from { transform: rotateX(90deg); opacity: 1; }
+  80%  { transform: rotateX(-1.6deg); opacity: 1; }
   to   { transform: rotateX(0deg); opacity: 1; }
 }
 
 .leaf-top.flip {
-  -webkit-animation: flipTop 0.3s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
-  animation: flipTop 0.3s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+  -webkit-animation: flipTop 0.17s cubic-bezier(0.42, 0.05, 0.9, 0.45) forwards;
+  animation: flipTop 0.17s cubic-bezier(0.42, 0.05, 0.9, 0.45) forwards;
 }
 
 .leaf-bot.flip {
-  -webkit-animation: flipBot 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards;
-  animation: flipBot 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards;
+  -webkit-animation: flipBot 0.17s cubic-bezier(0.12, 0.62, 0.24, 1) 0.11s forwards;
+  animation: flipBot 0.17s cubic-bezier(0.12, 0.62, 0.24, 1) 0.11s forwards;
 }
+
+/* The flap turns away from the light as it falls; the half behind it carries
+   the flap's shadow until it has cleared. Both are plain opacity, which the
+   old iPad's GPU handles without breaking a sweat. */
+.facet .shade {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.leaf-top.flip .shade {
+  -webkit-animation: shadeIn 0.17s cubic-bezier(0.42, 0.05, 0.9, 0.45) forwards;
+  animation: shadeIn 0.17s cubic-bezier(0.42, 0.05, 0.9, 0.45) forwards;
+}
+
+.leaf-bot.flip .shade {
+  -webkit-animation: shadeOut 0.17s cubic-bezier(0.12, 0.62, 0.24, 1) 0.11s forwards;
+  animation: shadeOut 0.17s cubic-bezier(0.12, 0.62, 0.24, 1) 0.11s forwards;
+}
+
+.facet.top:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.unit.flipping .facet.top:after {
+  -webkit-animation: castFade 0.28s ease-out forwards;
+  animation: castFade 0.28s ease-out forwards;
+}
+
+@-webkit-keyframes shadeIn { from { opacity: 0; } to { opacity: 0.38; } }
+@keyframes shadeIn { from { opacity: 0; } to { opacity: 0.38; } }
+@-webkit-keyframes shadeOut { from { opacity: 0.38; } to { opacity: 0; } }
+@keyframes shadeOut { from { opacity: 0.38; } to { opacity: 0; } }
+@-webkit-keyframes castFade { from { opacity: 0.85; } to { opacity: 0; } }
+@keyframes castFade { from { opacity: 0.85; } to { opacity: 0; } }
 
 /* the hairline where the two halves meet */
 .seam {

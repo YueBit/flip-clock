@@ -130,8 +130,8 @@
     u.innerHTML =
       '<div class="facet top"><span>0</span></div>' +
       '<div class="facet bot"><span>0</span></div>' +
-      '<div class="facet leaf-top"><span>0</span></div>' +
-      '<div class="facet leaf-bot"><span>0</span></div>' +
+      '<div class="facet leaf-top"><span>0</span><i class="shade"></i></div>' +
+      '<div class="facet leaf-bot"><span>0</span><i class="shade"></i></div>' +
       '<div class="seam"></div>';
     return {
       el: u,
@@ -156,6 +156,7 @@
     u.lbot.textContent = u.cur;
     u.ltopEl.className = 'facet leaf-top';
     u.lbotEl.className = 'facet leaf-bot';
+    u.el.className = 'unit';
     u.busy = false;
   }
 
@@ -179,15 +180,17 @@
     u.top.textContent = value;
     u.ltopEl.className = 'facet leaf-top flip';
     u.lbotEl.className = 'facet leaf-bot flip';
+    u.el.className = 'unit flipping';
     u.busy = true;
     u.timer = setTimeout(function () {
       u.top.textContent = value;
       u.bot.textContent = value;
       u.ltopEl.className = 'facet leaf-top';
       u.lbotEl.className = 'facet leaf-bot';
+      u.el.className = 'unit';
       u.busy = false;
       u.timer = null;
-    }, 620);
+    }, 520);
   }
 
   var units = { h1: makeUnit(), h2: makeUnit(), m1: makeUnit(), m2: makeUnit() };
@@ -229,6 +232,8 @@
 
     u.el.style.width = w + 'px';
     u.el.style.height = h + 'px';
+    u.el.style.webkitPerspective = Math.round(h * 10) + 'px';
+    u.el.style.perspective = Math.round(h * 10) + 'px';
     u.el.style.margin = '0 ' + (h * 0.016) + 'px';
 
     spans = u.el.getElementsByTagName('span');
