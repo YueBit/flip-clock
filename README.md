@@ -87,8 +87,13 @@ https://yuebit.github.io/flip-clock/?sound=sharp
 6. Optional: **Settings → Accessibility → Guided Access** pins the iPad to this
    one app, so a passing thumb cannot swipe out of it.
 
-Landscape and portrait both fill the screen, and the clock re-syncs the second
-the iPad wakes or Safari comes back to the foreground.
+Landscape and portrait both fill the glass. In portrait the seconds move under
+the minutes, which buys about a quarter more clock on a 1024×768 screen, and the
+date block centres itself rather than stretching away from the time. Type scales
+with the cards, so it stays in proportion at any size — and the layout re-measures
+itself once the shipped font has loaded, so nothing sits a few pixels off until
+the next resize. The clock re-syncs the second the iPad wakes or Safari comes
+back to the foreground.
 
 ## Put it on GitHub Pages
 

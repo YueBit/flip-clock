@@ -233,7 +233,7 @@
      ------------------------------------------------------------- */
 
   function sizeUnit(u, h) {
-    var w = h * 0.62;
+    var w = h * 0.58;
     var fs = Math.round(h * 0.92);
     var r = Math.max(3, Math.round(h * 0.035));
     var spans, i;
@@ -263,18 +263,39 @@
   function layout() {
     var W = document.documentElement.clientWidth || window.innerWidth;
     var H = document.documentElement.clientHeight || window.innerHeight;
-    var ratio = showSeconds ? 3.6 : 2.9;
-    var h = Math.min(W * 0.92 / ratio, H * 0.44);
+    var portrait = H > W;
+    var pad = Math.max(6, Math.round(W * 0.02));
+    var wrapEl = el('wrap');
+
+    wrapEl.style.paddingLeft = pad + 'px';
+    wrapEl.style.paddingRight = pad + 'px';
+
+    /* Portrait stacks the seconds under the minutes: five cards across a narrow
+       screen force the whole clock down to a third of the height, and on a mini
+       that is the difference between a clock and a postage stamp. */
+    var ratio = showSeconds ? (portrait ? 2.75 : 3.42) : 2.75;
+    var maxH = H * (portrait ? 0.42 : 0.50);
+    var h = Math.min((W - pad * 2) * 0.995 / ratio, maxH);
     if (h < 64) { h = 64; }
 
     var big = [units.h1, units.h2, units.m1, units.m2];
     var i;
 
     for (i = 0; i < big.length; i++) { sizeUnit(big[i], h); }
+
     if (showSeconds) {
-      sizeUnit(units.s1u, h * 0.42);
-      sizeUnit(units.s2u, h * 0.42);
-      secs.style.marginLeft = (h * 0.13) + 'px';
+      var sh = portrait ? h * 0.40 : h * 0.42;
+      sizeUnit(units.s1u, sh);
+      sizeUnit(units.s2u, sh);
+      if (portrait) {
+        secs.style.display = 'block';
+        secs.style.marginLeft = '0';
+        secs.style.marginTop = Math.round(h * 0.10) + 'px';
+      } else {
+        secs.style.display = 'inline-block';
+        secs.style.marginTop = '0';
+        secs.style.marginLeft = Math.round(h * 0.13) + 'px';
+      }
     }
 
     var dot = Math.max(4, Math.round(h * 0.062));
@@ -288,21 +309,62 @@
       dots[i].style.top = Math.round(h * (i === 0 ? 0.3 : 0.56)) + 'px';
     }
 
+    /* Type scales with the cards rather than with the viewport width, so the
+       date and the weather line stay in proportion with what they sit under.
+       Both floors exist because at mini sizes this line stops being readable
+       before it stops fitting. */
     var dateEl = el('date');
     var ruleEl = el('rule');
     var metaEl = document.querySelector('.meta');
 
-    dateEl.style.fontSize = Math.round(h * 0.105) + 'px';
-    dateEl.style.marginTop = Math.round(h * 0.17) + 'px';
-    ruleEl.style.width = Math.round(h * 0.5) + 'px';
-    ruleEl.style.marginTop = Math.round(h * 0.11) + 'px';
-    metaEl.style.fontSize = Math.max(11, Math.round(h * 0.062)) + 'px';
-    metaEl.style.marginTop = Math.round(h * 0.105) + 'px';
+    dateEl.style.fontSize = Math.max(18, Math.round(h * 0.125)) + 'px';
+    dateEl.style.marginTop = Math.round(h * 0.16) + 'px';
+    ruleEl.style.width = Math.round(h * 0.55) + 'px';
+    ruleEl.style.marginTop = Math.round(h * 0.085) + 'px';
+    metaEl.style.fontSize = Math.max(14, Math.round(h * 0.080)) + 'px';
+    metaEl.style.marginTop = Math.round(h * 0.075) + 'px';
+
+    var hintEl = el('hint');
+    if (hintEl) { hintEl.style.fontSize = Math.max(13, Math.round(h * 0.052)) + 'px'; }
 
     if (hour12) {
       periodEl.style.fontSize = Math.max(10, Math.round(h * 0.075)) + 'px';
       periodEl.style.marginLeft = Math.round(h * 0.05) + 'px';
       periodEl.style.marginBottom = Math.round(h * 0.045) + 'px';
+    }
+
+    /* Reset the anchors before measuring: a stale top or bottom from the last
+       orientation changes the box and makes every measurement below lie. */
+    var clockEl2 = el('clock');
+    var infoEl = el('info');
+    clockEl2.style.top = '0px';
+    infoEl.style.top = '0px';
+    infoEl.style.bottom = 'auto';
+
+    var clockH = clockEl2.offsetHeight;
+    var infoH = infoEl.offsetHeight;
+    var bottomPad = Math.round(H * 0.085);
+    var top = Math.round(H * (portrait ? 0.11 : 0.14));
+    var gap = (H - bottomPad - infoH) - top - clockH;
+
+    /* Anchor both ends while the gap still reads as deliberate spacing. On a
+       tall portrait screen that same gap becomes a hole in the middle of the
+       board, so past a fifth of the height the group closes up and centres. */
+    if (gap > H * 0.20) {
+      var groupGap = Math.round(H * 0.12);
+      var groupTop = Math.round((H - (clockH + groupGap + infoH)) / 2 - H * 0.015);
+      if (groupTop < 0) { groupTop = 0; }
+      clockEl2.style.top = groupTop + 'px';
+      infoEl.style.top = (groupTop + clockH + groupGap) + 'px';
+    } else if (gap < 12) {
+      var shift = Math.ceil((12 - gap) / 2);
+      clockEl2.style.top = Math.max(0, top - shift) + 'px';
+      infoEl.style.top = 'auto';
+      infoEl.style.bottom = Math.max(0, bottomPad - shift) + 'px';
+    } else {
+      clockEl2.style.top = top + 'px';
+      infoEl.style.top = 'auto';
+      infoEl.style.bottom = bottomPad + 'px';
     }
   }
 
@@ -739,6 +801,17 @@
     if (resizeTimer) { clearTimeout(resizeTimer); }
     resizeTimer = setTimeout(function () { layout(); tick(true); }, 250);
   }
+  /* The first layout runs before the shipped font has loaded, so its metrics are
+     the fallback's. Lay out again once everything has arrived, otherwise the
+     board sits a few pixels off until something forces a resize. */
+  function settleLayout() {
+    window.setTimeout(layout, 60);
+    window.setTimeout(layout, 400);
+    window.setTimeout(layout, 1200);
+  }
+  if (document.readyState === 'complete') { settleLayout(); }
+  else { window.addEventListener('load', settleLayout, false); }
+
   window.addEventListener('resize', onResize, false);
   window.addEventListener('orientationchange', onResize, false);
 
