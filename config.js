@@ -40,9 +40,11 @@ var CLOCK_CONFIG = {
   nightEnd: 7,
   nightDim: 0.55,     // 0 disables it
 
-  // Nudge the layout a few pixels every few minutes so the panel does not
-  // hold one image for weeks. Harmless; set false if you prefer it locked.
-  drift: true,
+  // Nudge the layout a few pixels every four minutes so the panel does not hold
+  // one image for weeks. Off by default: on an old iPad the full-screen
+  // re-rasterise it forces can flash the cards, and an LCD panel is not the
+  // thing that burns in anyway.
+  drift: false,
 
   // Plays a silent 2-pixel video to keep Safari from sleeping the screen.
   // Some iOS versions ignore it — see README for the setting that always works.

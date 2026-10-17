@@ -44,7 +44,7 @@ Everything lives in `config.js`. The lines you are most likely to touch:
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the screen fades to `nightDim` (0.55) brightness. Set `nightDim: 0` to turn it off. |
 | `showSeconds` | Hide the small seconds pair for a calmer board. |
 | `animate: false` | Turns the flip into a plain cut. Only needed if a very old iPad stutters. |
-| `drift: true` | Nudges the layout a few pixels every four minutes so the panel never holds one image for weeks. |
+| `drift: false` | Nudges the layout a few pixels every four minutes so the panel never holds one image for weeks. Off by default: on an old iPad the full-screen re-rasterise it forces can flash the cards. |
 
 ## Put it on the iPad
 

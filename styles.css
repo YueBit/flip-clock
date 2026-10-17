@@ -87,7 +87,7 @@ body {
   perspective: 1400px;
   -webkit-perspective-origin: 50% 50%;
   perspective-origin: 50% 50%;
-  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .facet {
@@ -139,7 +139,13 @@ body {
 }
 
 /* the two leaves that move */
+/* The leaves are out of the render tree between flips. Parked at exactly
+   +-90deg they are degenerate geometry, and the PowerVR GPU in an old iPad will
+   happily drop the whole card from its layer tree for a frame when it hits one.
+   A card that vanishes for a frame and comes back reads as a flicker bug, so
+   they only exist while a flip is running. */
 .facet.leaf-top {
+  display: none;
   -webkit-transform: rotateX(-90deg);
   transform: rotateX(-90deg);
   opacity: 0;
@@ -147,6 +153,7 @@ body {
 }
 
 .facet.leaf-bot {
+  display: none;
   -webkit-transform: rotateX(90deg);
   transform: rotateX(90deg);
   opacity: 0;

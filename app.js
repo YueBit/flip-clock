@@ -156,6 +156,8 @@
     u.lbot.textContent = u.cur;
     u.ltopEl.className = 'facet leaf-top';
     u.lbotEl.className = 'facet leaf-bot';
+    u.ltopEl.style.display = '';
+    u.lbotEl.style.display = '';
     u.el.className = 'unit';
     u.busy = false;
   }
@@ -178,6 +180,8 @@
     u.ltop.textContent = prev;
     u.lbot.textContent = value;
     u.top.textContent = value;
+    u.ltopEl.style.display = 'block';
+    u.lbotEl.style.display = 'block';
     u.ltopEl.className = 'facet leaf-top flip';
     u.lbotEl.className = 'facet leaf-bot flip';
     u.el.className = 'unit flipping';
@@ -187,10 +191,12 @@
       u.bot.textContent = value;
       u.ltopEl.className = 'facet leaf-top';
       u.lbotEl.className = 'facet leaf-bot';
+      u.ltopEl.style.display = '';
+      u.lbotEl.style.display = '';
       u.el.className = 'unit';
       u.busy = false;
       u.timer = null;
-    }, 520);
+    }, 300);
   }
 
   var units = { h1: makeUnit(), h2: makeUnit(), m1: makeUnit(), m2: makeUnit() };
@@ -571,6 +577,8 @@
      Night dim, drift, on-screen wake
      ------------------------------------------------------------- */
 
+  var dimNow = -1;
+
   function applyDim() {
     var dim = el('dim');
     var amount = num(pick('nightDim', 0.7));
@@ -579,9 +587,13 @@
     var h = (new Date()).getHours();
     var on;
 
-    if (!amount) { dim.style.opacity = '0'; return; }
+    if (!amount) {
+      if (dimNow !== 0) { dim.style.opacity = '0'; dimNow = 0; }
+      return;
+    }
     on = (start <= end) ? (h >= start && h < end) : (h >= start || h < end);
-    dim.style.opacity = on ? String(amount) : '0';
+    var next = on ? amount : 0;
+    if (next !== dimNow) { dim.style.opacity = String(next); dimNow = next; }
   }
 
   function startDrift() {
