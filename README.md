@@ -47,7 +47,7 @@ Open `config.js`. These are the lines worth knowing.
 | `city: 'Hangzhou'` | **Change this first.** Weather comes from Open-Meteo by place name, no key needed. If two places share the name, set `lat` and `lon` instead. |
 | `weatherEvery: 15` | Minutes between weather refreshes. |
 | `lang: 'en'` | `'en'` for English only, `'zh'` for Chinese, `'auto'` to copy the iPad. |
-| `theme: 'dark'` | The theme the clock starts in: `'dark'` is charcoal and cream, `'light'` is paper and ink, `'pixel'` is stone blocks on a night sky, `'clay'` is terracotta on cream paper. |
+| `theme: 'dark'` | The theme the clock starts in: `'dark'` is charcoal and cream, `'light'` is paper and ink, `'pixel'` is a Twemco-style flip clock (charcoal case, white caps), `'clay'` is terracotta on cream paper. |
 | `swipeThemes: true` | Swipe left or right anywhere on the glass to change the theme. `false` pins the clock to `theme` and ignores swipes. |
 | `hour12: false` | `true` switches to a 12-hour face with a small AM/PM. |
 | `showSeconds: true` | The small seconds pair beside the minutes. Turn it off for a calmer board. |
@@ -74,15 +74,22 @@ https://yuebit.github.io/flip-clock/?theme=pixel
 
 `dark` · `light` · `pixel` · `clay`
 
-The two pixel themes are one construction in two palettes: flat faces instead of
-gradients, a 4px hard bevel for the raised edge, square corners, an 8px grid of
-hairlines behind it, and **Monocraft** — a SIL OFL pixel face, licence in
-`fonts/OFL-monocraft.txt` — for the digits, the date and the weather line.
-Everything lands on a 9px grid: card heights are even, digit sizes are multiples
-of 9, and the weather and follower marks are 9×9 bitmaps, so the edges stay hard
-instead of greying out. `pixel` is stone on a night sky with a grass-green colon;
-`clay` is terracotta on cream paper, in the warm printed colours of the Claude
-palette.
+The two pixel themes share the type: **Monocraft** — a SIL OFL pixel face,
+licence in `fonts/OFL-monocraft.txt` — for the digits, the date and the weather
+line, with everything on a 9px grid (card heights are even, digit sizes are
+multiples of 9, and the weather and follower marks are 9×9 bitmaps, so the edges
+stay hard instead of greying out).
+
+`pixel` is a Twemco QT-30 pulled apart and rebuilt in pixels: a moulded charcoal
+case with a bright rim, inset plates with soft corners, a two-face plate split
+(a shade lighter above the hinge, a shade darker below), a hairline seam with
+the little hinge pins at each plate edge, white caps, and the seconds set
+smaller and quieter at the right. The case is measured to the cards in
+`layout()`, so it hugs them in either orientation and at any screen size.
+
+`clay` is a flat block print: terracotta plates, a hard 4px bevel, square
+corners and an 8px grid of hairlines behind it, in the warm colours of the
+Claude palette.
 
 `swipeThemes: false` pins the clock to the `theme` it was built with.
 

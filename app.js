@@ -375,10 +375,12 @@
   function sizeUnit(u, h) {
     /* Pixel faces are drawn on a 9-unit grid: a font size that is a multiple of
        9 (and the card height even) puts every edge of every glyph on a whole
-       pixel, which is the whole point of the theme. */
+       pixel, which is the whole point of the theme. The Twemco-style pixel
+       theme leaves more air around the cap than the flat one did. */
     var w = pix ? Math.round(h * 0.58) : h * 0.58;
-    var fs = pix ? Math.max(18, Math.floor(h * 0.90 / 18) * 18) : Math.round(h * 0.92);
-    var r = pix ? 0 : Math.max(3, Math.round(h * 0.035));
+    var fs = pix ? Math.max(18, Math.floor(h * 0.84 / 18) * 18) : Math.round(h * 0.92);
+    /* Plates have soft corners in the case theme and hard ones in clay. */
+    var r = theme === 'pixel' ? Math.round(h * 0.028) : (pix ? 0 : Math.max(3, Math.round(h * 0.035)));
     /* Monocraft's digit sits on the pen origin (no left bearing), so centre the
        ink itself: its advance is 2/3 of the font size and the glyph 5/9. */
     var adv = pix ? Math.round(fs * 2 / 3) : 0;
@@ -448,6 +450,9 @@
        screen force the whole clock down to a third of the height, and on a mini
        that is the difference between a clock and a postage stamp. */
     var ratio = showSeconds ? (portrait ? 2.75 : 3.42) : 2.75;
+    /* The pixel theme's housing adds a moulded margin around the cards, so its
+       cards are set a little smaller to leave the case air at the screen edge. */
+    if (theme === 'pixel') { ratio += 0.26; }
     var maxH = H * (portrait ? 0.42 : 0.50);
     var h = Math.min((W - pad * 2) * 0.995 / ratio, maxH);
     if (h < 64) { h = 64; }
@@ -475,7 +480,10 @@
       }
     }
 
-    var dot = pix ? Math.max(6, Math.round(h * 0.075)) : Math.max(4, Math.round(h * 0.062));
+    /* The Twemco has no colon; the small squares that separate the plates
+       should read as pivot marks, not as a traffic light. */
+    var dot = theme === 'pixel' ? Math.max(4, Math.round(h * 0.038))
+      : (pix ? Math.max(6, Math.round(h * 0.075)) : Math.max(4, Math.round(h * 0.062)));
     var dots = colon.getElementsByTagName('i');
     colon.style.width = Math.round(h * 0.22) + 'px';
     colon.style.height = Math.round(h) + 'px';
@@ -551,6 +559,37 @@
     }
 
     snapUnits(pix);
+    if (pix) {
+      /* The case is measured to the cards, the seconds included, so it hugs
+         them in either orientation and at any screen size. */
+      sizeCase(Math.round(h * 0.13), Math.round(h * 0.10));
+    }
+  }
+
+  /* The pixel theme's housing: a moulded rectangle around the plates with the
+     bright rim of the QT-30's glass. Only the pixel theme draws it. */
+  function sizeCase(padX, padY) {
+    var box = el('case');
+    if (!box) { return; }
+    var base = el('wrap').getBoundingClientRect();
+    var list = document.querySelectorAll('.unit');
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, i, r;
+
+    for (i = 0; i < list.length; i++) {
+      r = list[i].getBoundingClientRect();
+      if (!r.width || !r.height) { continue; }
+      if (r.left < minX) { minX = r.left; }
+      if (r.top < minY) { minY = r.top; }
+      if (r.right > maxX) { maxX = r.right; }
+      if (r.bottom > maxY) { maxY = r.bottom; }
+    }
+    if (minX > maxX) { return; }
+
+    box.style.left = Math.round(minX - base.left - padX) + 'px';
+    box.style.top = Math.round(minY - base.top - padY) + 'px';
+    box.style.width = Math.round(maxX - minX + padX * 2) + 'px';
+    box.style.height = Math.round(maxY - minY + padY * 2) + 'px';
+    box.style.borderRadius = Math.round((maxY - minY + padY * 2) * 0.085) + 'px';
   }
 
   /* -------------------------------------------------------------
@@ -1037,7 +1076,7 @@
   var THEME_KEY = 'flipclock.theme';
   var THEME_ORDER = ['dark', 'light', 'pixel', 'clay'];
   var THEME_NAME = { dark: 'Dark', light: 'Light', pixel: 'Pixel', clay: 'Clay' };
-  var THEME_COLOR = { dark: '#121110', light: '#efe9dd', pixel: '#101418', clay: '#f1efe7' };
+  var THEME_COLOR = { dark: '#121110', light: '#efe9dd', pixel: '#121110', clay: '#f1efe7' };
   var PIXEL_THEME = { pixel: true, clay: true };
   var theme = 'dark';
   var pix = false;
