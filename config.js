@@ -9,8 +9,14 @@ var CLOCK_CONFIG = {
   // false = 24-hour clock (09:41), true = 12-hour with a small AM/PM
   hour12: false,
 
-  // 'dark' (warm charcoal, easy on the eyes at night) or 'light' (paper)
+  // 'dark' (warm charcoal), 'light' (paper), 'pixel' (stone block, Minecraft)
+  // or 'clay' (terracotta on paper). Swipe across the glass to move through
+  // them; the swipe is remembered on the device.
   theme: 'dark',
+
+  // Swipe left or right anywhere on the glass to change the theme.
+  // false pins the clock to the theme above and ignores swipes.
+  swipeThemes: true,
 
   // Show the small seconds pair next to the minutes
   showSeconds: true,

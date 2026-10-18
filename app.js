@@ -117,6 +117,146 @@
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
   }
 
+  /* Pixel marks: 9x9 bitmaps drawn as rects, because a 1.5px line drawing next
+     to Monocraft reads as a different typeface. One cell is one ninth of the
+     icon's width, and the pixel face is always a multiple of 9px, so the cells
+     land on whole pixels. */
+  var PIXEL_ICON = {
+    clear: [
+      '.........',
+      '....#....',
+      '..#...#..',
+      '...###...',
+      '#..###..#',
+      '...###...',
+      '..#...#..',
+      '....#....',
+      '.........'
+    ],
+    moon: [
+      '.........',
+      '.....###.',
+      '....##...',
+      '...##....',
+      '...##....',
+      '...##....',
+      '....##...',
+      '.....###.',
+      '.........'
+    ],
+    mostlysunny: [
+      '###......',
+      '###......',
+      '###......',
+      '.........',
+      '...###...',
+      '..#####..',
+      '.#######.',
+      '.........',
+      '.........'
+    ],
+    cloudy: [
+      '.........',
+      '.........',
+      '....###..',
+      '...#####.',
+      '..#######',
+      '.########',
+      '.########',
+      '.........',
+      '.........'
+    ],
+    fog: [
+      '.........',
+      '.........',
+      '#########',
+      '.........',
+      '.#######.',
+      '.........',
+      '#########',
+      '.........',
+      '.........'
+    ],
+    drizzle: [
+      '.........',
+      '....###..',
+      '...#####.',
+      '..#######',
+      '.########',
+      '.........',
+      '...#.#...',
+      '.........',
+      '.........'
+    ],
+    rain: [
+      '.........',
+      '....###..',
+      '...#####.',
+      '..#######',
+      '.########',
+      '.........',
+      '..#.#.#..',
+      '..#.#.#..',
+      '.........'
+    ],
+    snow: [
+      '.........',
+      '....###..',
+      '...#####.',
+      '..#######',
+      '.########',
+      '.........',
+      '..#.#.#..',
+      '.#.#.#.#.',
+      '.........'
+    ],
+    thunder: [
+      '.........',
+      '....###..',
+      '...#####.',
+      '..#######',
+      '.########',
+      '....##...',
+      '...##....',
+      '..##.....',
+      '.........'
+    ],
+    bilibili: [
+      '.........',
+      '..#...#..',
+      '...#.#...',
+      '.#######.',
+      '.#.....#.',
+      '.#.#.#.#.',
+      '.#.....#.',
+      '.#######.',
+      '.........'
+    ]
+  };
+
+  /* One mark serves two WMO labels. */
+  PIXEL_ICON.partly = PIXEL_ICON.mostlysunny;
+  PIXEL_ICON.showers = PIXEL_ICON.rain;
+
+  function pixelIconSVG(name) {
+    var rows = PIXEL_ICON[name] || PIXEL_ICON.cloudy;
+    var body = '', y, x, start;
+    for (y = 0; y < rows.length; y++) {
+      x = 0;
+      while (x < rows[y].length) {
+        if (rows[y].charAt(x) === '#') {
+          start = x;
+          while (x < rows[y].length && rows[y].charAt(x) === '#') { x++; }
+          body += '<rect x="' + start + '" y="' + y + '" width="' + (x - start) + '" height="1"/>';
+        } else {
+          x++;
+        }
+      }
+    }
+    return '<svg viewBox="0 0 9 9" fill="currentColor" shape-rendering="crispEdges" ' +
+      'aria-hidden="true">' + body + '</svg>';
+  }
+
   /* -------------------------------------------------------------
      Flip digits
      ------------------------------------------------------------- */
@@ -233,30 +373,64 @@
      ------------------------------------------------------------- */
 
   function sizeUnit(u, h) {
-    var w = h * 0.58;
-    var fs = Math.round(h * 0.92);
-    var r = Math.max(3, Math.round(h * 0.035));
+    /* Pixel faces are drawn on a 9-unit grid: a font size that is a multiple of
+       9 (and the card height even) puts every edge of every glyph on a whole
+       pixel, which is the whole point of the theme. */
+    var w = pix ? Math.round(h * 0.58) : h * 0.58;
+    var fs = pix ? Math.max(18, Math.floor(h * 0.90 / 18) * 18) : Math.round(h * 0.92);
+    var r = pix ? 0 : Math.max(3, Math.round(h * 0.035));
+    /* Monocraft's digit sits on the pen origin (no left bearing), so centre the
+       ink itself: its advance is 2/3 of the font size and the glyph 5/9. */
+    var adv = pix ? Math.round(fs * 2 / 3) : 0;
+    var ink = pix ? Math.round(fs * 5 / 9) : 0;
+    var shift = pix ? Math.round((w - ink) / 2 - (adv < w ? (w - adv) / 2 : 0)) : 0;
     var spans, i;
 
     u.el.style.width = w + 'px';
     u.el.style.height = h + 'px';
     u.el.style.webkitPerspective = Math.round(h * 10) + 'px';
     u.el.style.perspective = Math.round(h * 10) + 'px';
-    u.el.style.margin = '0 ' + (h * 0.016) + 'px';
+    u.el.style.margin = '0 ' + (pix ? Math.round(h * 0.016) : h * 0.016) + 'px';
 
     spans = u.el.getElementsByTagName('span');
     for (i = 0; i < spans.length; i++) {
       spans[i].style.fontSize = fs + 'px';
+      spans[i].style.width = w + 'px';
       spans[i].style.height = h + 'px';
       spans[i].style.lineHeight = h + 'px';
+      spans[i].style.marginLeft = pix ? shift + 'px' : '';
       // bottom-facing facets show the lower half of the same glyph
-      spans[i].style.marginTop = (i === 1 || i === 3) ? (-h / 2) + 'px' : '0';
+      spans[i].style.marginTop = ((i === 1 || i === 3) ? (-h / 2) : 0) + 'px';
     }
 
     for (i = 0; i < 4; i++) {
       u.facets[i].style.borderRadius = (i === 0 || i === 2)
         ? r + 'px ' + r + 'px 0 0'
         : '0 0 ' + r + 'px ' + r + 'px';
+    }
+  }
+
+  /* Pixel text is drawn on a 9-unit grid, so the only sizes that stay sharp are
+     multiples of 9px. Pick the nearest one, never below the floor. */
+  function pixelPx(size, floor) {
+    return Math.max(floor, Math.round(size / 9) * 9) + 'px';
+  }
+
+  /* Inline-block centring leaves the group at a fractional x, and a glyph drawn
+     on a half pixel is a glyph with grey edges. Shift each card (visual offset
+     only, no reflow) so its left edge lands on a whole pixel. */
+  function snapUnits(on) {
+    var list = document.querySelectorAll('.unit');
+    var i, r, d;
+    for (i = 0; i < list.length; i++) {
+      list[i].style.position = 'relative';
+      list[i].style.left = '0px';
+    }
+    if (!on) { return; }
+    for (i = 0; i < list.length; i++) {
+      r = list[i].getBoundingClientRect();
+      d = Math.round(r.left) - r.left;
+      list[i].style.left = d + 'px';
     }
   }
 
@@ -277,6 +451,9 @@
     var maxH = H * (portrait ? 0.42 : 0.50);
     var h = Math.min((W - pad * 2) * 0.995 / ratio, maxH);
     if (h < 64) { h = 64; }
+    /* An even whole number of pixels, so the seam lands on a pixel row and a
+       pixel face can draw every glyph edge without anti-aliasing it. */
+    if (pix) { h = Math.round(h / 2) * 2; }
 
     var big = [units.h1, units.h2, units.m1, units.m2];
     var i;
@@ -298,7 +475,7 @@
       }
     }
 
-    var dot = Math.max(4, Math.round(h * 0.062));
+    var dot = pix ? Math.max(6, Math.round(h * 0.075)) : Math.max(4, Math.round(h * 0.062));
     var dots = colon.getElementsByTagName('i');
     colon.style.width = Math.round(h * 0.22) + 'px';
     colon.style.height = Math.round(h) + 'px';
@@ -317,18 +494,24 @@
     var ruleEl = el('rule');
     var metaEl = document.querySelector('.meta');
 
-    dateEl.style.fontSize = Math.max(18, Math.round(h * 0.125)) + 'px';
+    dateEl.style.fontSize = pix ? pixelPx(h * 0.125, 27) : Math.max(18, Math.round(h * 0.125)) + 'px';
     dateEl.style.marginTop = Math.round(h * 0.16) + 'px';
     ruleEl.style.width = Math.round(h * 0.55) + 'px';
     ruleEl.style.marginTop = Math.round(h * 0.085) + 'px';
-    metaEl.style.fontSize = Math.max(14, Math.round(h * 0.080)) + 'px';
+    metaEl.style.fontSize = pix ? pixelPx(h * 0.080, 18) : Math.max(14, Math.round(h * 0.080)) + 'px';
     metaEl.style.marginTop = Math.round(h * 0.075) + 'px';
 
     var hintEl = el('hint');
-    if (hintEl) { hintEl.style.fontSize = Math.max(13, Math.round(h * 0.052)) + 'px'; }
+    if (hintEl) {
+      hintEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : Math.max(13, Math.round(h * 0.052)) + 'px';
+    }
+    var toastEl = el('toast');
+    if (toastEl) {
+      toastEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : Math.max(13, Math.round(h * 0.052)) + 'px';
+    }
 
     if (hour12) {
-      periodEl.style.fontSize = Math.max(10, Math.round(h * 0.075)) + 'px';
+      periodEl.style.fontSize = pix ? pixelPx(h * 0.075, 18) : Math.max(10, Math.round(h * 0.075)) + 'px';
       periodEl.style.marginLeft = Math.round(h * 0.05) + 'px';
       periodEl.style.marginBottom = Math.round(h * 0.045) + 'px';
     }
@@ -366,6 +549,8 @@
       infoEl.style.top = 'auto';
       infoEl.style.bottom = bottomPad + 'px';
     }
+
+    snapUnits(pix);
   }
 
   /* -------------------------------------------------------------
@@ -425,6 +610,7 @@
 
   var GEO_KEY = 'flipclock.city';
   var haveWeather = false;
+  var lastWeather = null;
 
   function getJSON(url, ok, fail) {
     var x = new XMLHttpRequest();
@@ -461,7 +647,9 @@
     if (icon === 'mostlysunny' && !isDay) { icon = 'moon'; }
     if (icon === 'partly' && !isDay) { icon = 'moon'; }
 
-    el('wicon').innerHTML = iconSVG(icon);
+    lastWeather = { temp: temp, code: code, isDay: isDay };
+
+    el('wicon').innerHTML = pix ? pixelIconSVG(icon) : iconSVG(icon);
     el('wtemp').textContent = Math.round(temp) + '°';
     el('wdesc').textContent = lang === 'zh' ? row[1] : row[2];
     show(el('weather'), true);
@@ -539,6 +727,7 @@
      ------------------------------------------------------------- */
 
   var haveFollowers = false;
+  var lastFollowers = null;
 
   function biliSVG() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
@@ -561,12 +750,21 @@
   }
 
   function showFollowers(n) {
-    el('ficon').innerHTML = biliSVG();
+    lastFollowers = n;
+    el('ficon').innerHTML = pix ? pixelIconSVG('bilibili') : biliSVG();
     el('fcount').textContent = shortCount(n);
     el('flabel').textContent = lang === 'zh' ? '粉丝' : 'followers';
     show(el('followers'), true);
     haveFollowers = true;
     updateSeps();
+  }
+
+  /* The marks are drawn differently in each theme idiom, so a theme change has
+     to redraw them; otherwise the old line-art icon sits there until the next
+     weather refresh. */
+  function repaintIcons() {
+    if (lastWeather) { showWeather(lastWeather.temp, lastWeather.code, lastWeather.isDay); }
+    if (lastFollowers !== null) { showFollowers(lastFollowers); }
   }
 
   /* One place decides where the dots go: weather · followers · note, with a dot
@@ -831,11 +1029,154 @@
   }
 
   /* -------------------------------------------------------------
+     Themes — a swipe across the glass moves through them.
+     The choice is remembered per device; ?theme=pixel overrides it
+     once, which is how a theme is tried without editing a file.
+     ------------------------------------------------------------- */
+
+  var THEME_KEY = 'flipclock.theme';
+  var THEME_ORDER = ['dark', 'light', 'pixel', 'clay'];
+  var THEME_NAME = { dark: 'Dark', light: 'Light', pixel: 'Pixel', clay: 'Clay' };
+  var THEME_COLOR = { dark: '#121110', light: '#efe9dd', pixel: '#101418', clay: '#f1efe7' };
+  var PIXEL_THEME = { pixel: true, clay: true };
+  var theme = 'dark';
+  var pix = false;
+
+  function readSaved(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function writeSaved(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+
+  var toastTimer = null;
+
+  function showThemeName(name) {
+    var t = el('toast');
+    if (!t) { return; }
+    t.textContent = name;
+    t.className = 'toast show';
+    if (toastTimer) { clearTimeout(toastTimer); }
+    toastTimer = setTimeout(function () {
+      t.className = 'toast';
+      toastTimer = null;
+    }, 1500);
+  }
+
+  /* Applying a theme is three things: the body class the CSS keys off, the
+     browser chrome colour, and a re-layout, because the pixel faces give the
+     cards square corners and set type at a different size. */
+  function applyTheme(name, quiet, remember) {
+    if (!THEME_NAME[name]) { return; }
+    theme = name;
+    pix = !!PIXEL_THEME[name];
+    document.body.className = 'theme-' + name + (pix ? ' pix' : '') + ' lang-' + lang;
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) { meta.setAttribute('content', THEME_COLOR[name]); }
+
+    if (remember) { writeSaved(THEME_KEY, name); }
+
+    layout();
+    tick(true);
+    repaintIcons();
+    if (!quiet) { showThemeName(THEME_NAME[name]); }
+
+    /* The pixel face is a webfont that may not have arrived yet; measure the
+       date and meta lines again once it has, or they sit at fallback widths. */
+    setTimeout(layout, 150);
+    setTimeout(layout, 900);
+  }
+
+  function stepTheme(dir) {
+    var i = 0, k;
+    for (k = 0; k < THEME_ORDER.length; k++) {
+      if (THEME_ORDER[k] === theme) { i = k; }
+    }
+    i = (i + dir + THEME_ORDER.length) % THEME_ORDER.length;
+    applyTheme(THEME_ORDER[i], false, true);
+  }
+
+  /* A swipe is a horizontal drag of at least 55px that is not mostly vertical
+     and does not take a second; a tap stays a tap, because the tap is what
+     arms the sound. Mouse drags work the same way, for a desktop preview. */
+  var swipe = { on: pick('swipeThemes', true) !== false, x: 0, y: 0, t: 0, live: false };
+
+  function swipeStart(x, y) {
+    swipe.x = x;
+    swipe.y = y;
+    swipe.t = (new Date()).getTime();
+    swipe.live = true;
+  }
+
+  function swipeEnd(x, y) {
+    if (!swipe.live) { return; }
+    swipe.live = false;
+    var dx = x - swipe.x;
+    var dy = y - swipe.y;
+    var ms = (new Date()).getTime() - swipe.t;
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.5 || ms > 900) { return; }
+    stepTheme(dx < 0 ? 1 : -1);
+  }
+
+  if (swipe.on) {
+    /* A horizontal swipe must belong to the clock, not to the browser's own
+       back gesture. That needs a cancelable touchmove: modern Safari makes
+       document-level move listeners passive unless told otherwise, while iOS 9
+       has no options object at all and is non-passive by default. */
+    var PASSIVE = false;
+    try {
+      var probe = Object.defineProperty({}, 'passive', {
+        get: function () { PASSIVE = true; return false; }
+      });
+      window.addEventListener('flipclock-probe', null, probe);
+      window.removeEventListener('flipclock-probe', null, probe);
+    } catch (e) { PASSIVE = false; }
+
+    document.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { swipe.live = false; return; }
+      swipeStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, false);
+    document.addEventListener('touchmove', function (e) {
+      if (e.touches.length !== 1) { swipe.live = false; return; }
+      if (!swipe.live) { return; }
+      var t = e.touches[0];
+      var dx = t.clientX - swipe.x;
+      var dy = t.clientY - swipe.y;
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2 && e.cancelable) {
+        e.preventDefault();
+      }
+    }, PASSIVE ? { passive: false } : false);
+    document.addEventListener('touchend', function (e) {
+      var t = e.changedTouches && e.changedTouches[0];
+      if (t) { swipeEnd(t.clientX, t.clientY); }
+    }, false);
+    document.addEventListener('touchcancel', function () { swipe.live = false; }, false);
+
+    document.addEventListener('mousedown', function (e) { swipeStart(e.clientX, e.clientY); }, false);
+    document.addEventListener('mouseup', function (e) { swipeEnd(e.clientX, e.clientY); }, false);
+
+    document.addEventListener('keydown', function (e) {
+      var key = e.keyCode;
+      if (key === 37) { stepTheme(-1); }
+      else if (key === 39) { stepTheme(1); }
+    }, false);
+  }
+
+  /* -------------------------------------------------------------
      Boot
      ------------------------------------------------------------- */
 
-  document.body.className = 'theme-' + (pick('theme', 'dark') === 'light' ? 'light' : 'dark') +
-    ' lang-' + lang;
+  var firstTheme = (function () {
+    var m = /[?&]theme=([a-z]+)/.exec(location.search);
+    if (m && THEME_NAME[m[1]]) { return m[1]; }
+    var saved = readSaved(THEME_KEY);
+    if (saved && THEME_NAME[saved]) { return saved; }
+    var configured = String(pick('theme', 'dark')).toLowerCase();
+    return THEME_NAME[configured] ? configured : 'dark';
+  })();
+
+  applyTheme(firstTheme, true, false);
 
   layout();
   tick(true);

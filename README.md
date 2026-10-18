@@ -22,7 +22,7 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
 | `soundlab.html` | tap-to-compare page for choosing a sound |
-| `fonts/` | Rajdhani, cut down to ASCII and shipped as WOFF |
+| `fonts/` | Rajdhani and Monocraft, cut down to ASCII and shipped as WOFF |
 | `keep-awake.mp4` | a two-pixel silent loop that asks iOS not to sleep |
 | `icon.svg`, `apple-touch-icon.png` | tab icon, home-screen icon |
 | `tools/make-sounds.py` | rebuilds the sound sets from their parameters |
@@ -47,7 +47,8 @@ Open `config.js`. These are the lines worth knowing.
 | `city: 'Hangzhou'` | **Change this first.** Weather comes from Open-Meteo by place name, no key needed. If two places share the name, set `lat` and `lon` instead. |
 | `weatherEvery: 15` | Minutes between weather refreshes. |
 | `lang: 'en'` | `'en'` for English only, `'zh'` for Chinese, `'auto'` to copy the iPad. |
-| `theme: 'dark'` | `'dark'` is charcoal and cream; `'light'` is paper and ink. |
+| `theme: 'dark'` | The theme the clock starts in: `'dark'` is charcoal and cream, `'light'` is paper and ink, `'pixel'` is stone blocks on a night sky, `'clay'` is terracotta on cream paper. |
+| `swipeThemes: true` | Swipe left or right anywhere on the glass to change the theme. `false` pins the clock to `theme` and ignores swipes. |
 | `hour12: false` | `true` switches to a 12-hour face with a small AM/PM. |
 | `showSeconds: true` | The small seconds pair beside the minutes. Turn it off for a calmer board. |
 | `notes: []` | The line under the date. Empty means the line does not exist — a slot you have not filled stays empty. Fill it with strings and it rotates through them every `noteEvery` minutes. |
@@ -56,6 +57,34 @@ Open `config.js`. These are the lines worth knowing.
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the glass drops to 55% brightness. `nightDim: 0` turns that off. |
 | `animate: false` | Replaces the flip with a plain cut. Only needed if a very old iPad stutters. |
 | `drift: false` | Nudges the layout a few pixels every four minutes, so the panel never holds one image for weeks. Off by default: the redraw it forces can flash the cards on old hardware, and an LCD is not what burns in. |
+
+## Themes
+
+Four of them, and a swipe moves through them: **dark → light → pixel → clay → dark**.
+Swipe left for the next, right for the previous; the name flashes at the top of
+the glass for a second, and a tap still only arms the sound. The choice is kept
+in `localStorage` on the device, so the clock comes back wearing the theme you
+left it in.
+
+To try one without editing a file — or to point a home-screen shortcut at it:
+
+```
+https://yuebit.github.io/flip-clock/?theme=pixel
+```
+
+`dark` · `light` · `pixel` · `clay`
+
+The two pixel themes are one construction in two palettes: flat faces instead of
+gradients, a 4px hard bevel for the raised edge, square corners, an 8px grid of
+hairlines behind it, and **Monocraft** — a SIL OFL pixel face, licence in
+`fonts/OFL-monocraft.txt` — for the digits, the date and the weather line.
+Everything lands on a 9px grid: card heights are even, digit sizes are multiples
+of 9, and the weather and follower marks are 9×9 bitmaps, so the edges stay hard
+instead of greying out. `pixel` is stone on a night sky with a grass-green colon;
+`clay` is terracotta on cream paper, in the warm printed colours of the Claude
+palette.
+
+`swipeThemes: false` pins the clock to the `theme` it was built with.
 
 ## Bilibili followers
 
@@ -145,7 +174,9 @@ it without a stutter. On anything newer all of that is simply ignored.
 The type is Rajdhani, cut down to ASCII and shipped as **WOFF**: iOS 9 cannot
 read WOFF2, and a self-hosted face means the iPad draws exactly what the desktop
 preview showed instead of falling back to whatever serif the system happens to
-own. Delete the `@font-face` block and the stack drops to Menlo.
+own. Delete the `@font-face` block and the stack drops to Menlo. Monocraft, the
+pixel face, ships the same way: a 10 KB WOFF subset, only downloaded when a
+pixel theme is actually on screen.
 
 The weather is the only thing that touches the network. When it fails, the line
 hides itself and the clock carries on without it.
@@ -158,4 +189,6 @@ hides itself and the clock carries on without it.
 | The time is wrong | It follows the iPad's clock and time zone. |
 | The screen sleeps | Step 4 above. Confirm Auto-Lock really says `Never`. |
 | The flip stutters | `animate: false` in `config.js`. |
+| The theme is not the one set in `config.js` | A swipe is remembered on that device and wins over the config. `?theme=dark`, `?theme=light`, `?theme=pixel` or `?theme=clay` pins it for that load. |
+| Swiping does nothing | The drag has to be mostly horizontal and at least 55px. Check `swipeThemes` is not `false`. |
 | No tick sound | Tap the page once, and check the side switch is not set to mute. |

@@ -450,6 +450,28 @@ body.theme-light .facet.leaf-bot:after {
 
 .hint.show { opacity: 0.85; }
 
+/* The theme name, for a moment after a swipe. */
+.toast {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6%;
+  text-align: center;
+  color: #cfc6b8;
+  font-family: "Rajdhani", "Menlo", monospace;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transition: opacity 0.4s ease;
+  transition: opacity 0.4s ease;
+  z-index: 18;
+}
+
+.toast.show { opacity: 0.9; }
+
 #dim {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -530,3 +552,165 @@ body.theme-light .rule { background: rgba(70, 58, 40, 0.16); }
 body.theme-light .meta { color: #837866; }
 body.theme-light .sep { color: rgba(70, 58, 40, 0.3); }
 body.theme-light .period { color: #837866; }
+
+/* ---------------------------------------------------------------
+   Pixel themes
+   One construction, two palettes. Flat faces instead of gradients,
+   a hard 4px bevel, square corners, unblurred shadows, and Monocraft
+   (SIL OFL, see fonts/OFL-monocraft.txt) for every string.
+   --------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("fonts/monocraft-400.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* The dither: an 8px grid of 1px lines, drawn as gradients because an
+   old Safari has no other way to tile a pattern without an image. */
+body.pix {
+  background-image:
+    -webkit-linear-gradient(top, rgba(255, 255, 255, 0.028) 0, rgba(255, 255, 255, 0.028) 1px, rgba(255, 255, 255, 0) 1px, rgba(255, 255, 255, 0) 8px),
+    -webkit-linear-gradient(left, rgba(255, 255, 255, 0.028) 0, rgba(255, 255, 255, 0.028) 1px, rgba(255, 255, 255, 0) 1px, rgba(255, 255, 255, 0) 8px);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 0, rgba(255, 255, 255, 0.028) 1px, transparent 1px, transparent 8px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 0, rgba(255, 255, 255, 0.028) 1px, transparent 1px, transparent 8px);
+}
+
+body.pix .unit {
+  background: #2b3136;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.32);
+}
+
+body.pix .facet.top,
+body.pix .facet.leaf-top {
+  background-image: none;
+  background-color: #3e454c;
+  box-shadow: inset 4px 4px 0 #5c656d, inset -4px 0 0 #1c2024;
+}
+
+body.pix .facet.bot,
+body.pix .facet.leaf-bot {
+  background-image: none;
+  background-color: #353b41;
+  box-shadow: inset 4px 0 0 #4a525a, inset -4px -4px 0 #1c2024;
+}
+
+body.pix .facet.top:after {
+  background-image: none;
+  background-color: rgba(0, 0, 0, 0.16);
+  height: 8px;
+}
+
+body.pix .facet.bot:after,
+body.pix .facet.leaf-bot:after {
+  background-image: none;
+  background-color: rgba(0, 0, 0, 0.14);
+  height: 8px;
+}
+
+body.pix .seam {
+  height: 3px;
+  margin-top: -1.5px;
+  background: #14181c;
+  box-shadow: 0 3px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.pix .facet span {
+  color: #f0ead8;
+  font-family: "Monocraft", "Rajdhani", monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-shadow: 0.033em 0.033em 0 rgba(0, 0, 0, 0.45);
+}
+
+body.pix .colon i {
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+body.pix .date {
+  color: #efe9d6;
+  font-family: "Monocraft", "Rajdhani", "Songti SC", "STSong", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-shadow: 0.111em 0.111em 0 rgba(0, 0, 0, 0.45);
+}
+
+body.pix .meta,
+body.pix .period,
+body.pix .hint,
+body.pix .toast {
+  font-family: "Monocraft", "Rajdhani", "Menlo", monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+body.pix .rule {
+  height: 3px;
+}
+
+/* A 9x9 mark is one em wide, so its cells are a third of the pixel face's
+   grid and land on whole pixels. */
+body.pix .wicon,
+body.pix .ficon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.12em;
+}
+
+/* Minecraft: a stone slab on a dark night, one grass-green accent. */
+body.theme-pixel {
+  color: #b9c0b3;
+  background-color: #101418;
+}
+
+body.theme-pixel .date { color: #efe9d6; }
+body.theme-pixel .meta { color: #93a08a; }
+body.theme-pixel .period { color: #93a08a; }
+body.theme-pixel .hint { color: #7f8c74; }
+body.theme-pixel .sep { color: rgba(255, 255, 255, 0.25); }
+body.theme-pixel .colon i { background: #8fc75d; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4); }
+body.theme-pixel .rule { background: rgba(143, 199, 93, 0.45); }
+body.theme-pixel .toast { color: #8fc75d; }
+
+/* Clay: paper and terracotta — warm, flat, printed on a grid. */
+body.theme-clay {
+  color: #4a443b;
+  background-color: #f1efe7;
+  background-image:
+    -webkit-linear-gradient(top, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, rgba(70, 58, 40, 0) 1px, rgba(70, 58, 40, 0) 8px),
+    -webkit-linear-gradient(left, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, rgba(70, 58, 40, 0) 1px, rgba(70, 58, 40, 0) 8px);
+  background-image:
+    linear-gradient(to bottom, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, transparent 1px, transparent 8px),
+    linear-gradient(to right, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, transparent 1px, transparent 8px);
+}
+
+body.theme-clay .unit {
+  background: #cf6f50;
+  box-shadow: 0 6px 0 rgba(120, 60, 40, 0.22);
+}
+
+body.theme-clay .facet.top,
+body.theme-clay .facet.leaf-top {
+  background-color: #dd8062;
+  box-shadow: inset 4px 4px 0 #f0a487, inset -4px 0 0 #a04d31;
+}
+
+body.theme-clay .facet.bot,
+body.theme-clay .facet.leaf-bot {
+  background-color: #cd6c4d;
+  box-shadow: inset 4px 0 0 #e08f72, inset -4px -4px 0 #a04d31;
+}
+
+body.theme-clay .facet span { color: #fbf6ec; text-shadow: 0.033em 0.033em 0 rgba(90, 35, 20, 0.45); }
+body.theme-clay .seam { background: #9c4a2f; box-shadow: 0 3px 0 rgba(255, 255, 255, 0.35); }
+body.theme-clay .date { color: #201e1a; text-shadow: 3px 3px 0 rgba(217, 119, 87, 0.3); }
+body.theme-clay .meta { color: #6f675b; }
+body.theme-clay .period { color: #6f675b; }
+body.theme-clay .hint { color: #8a8175; }
+body.theme-clay .sep { color: rgba(70, 58, 40, 0.3); }
+body.theme-clay .colon i { background: #b5532f; }
+body.theme-clay .rule { background: rgba(181, 83, 47, 0.45); }
+body.theme-clay .toast { color: #b5532f; }
