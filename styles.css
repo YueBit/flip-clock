@@ -452,6 +452,36 @@ body.theme-light .facet.leaf-bot:after {
   letter-spacing: 0.06em;
 }
 
+/* Shanghai Composite, sitting beside the followers. */
+.quote {
+  display: inline-block;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.qvalue {
+  margin-left: 0.34em;
+  letter-spacing: 0.05em;
+}
+
+.qchange {
+  margin-left: 0.42em;
+  letter-spacing: 0.04em;
+}
+
+/* Shanghai paints a rise red and a fall green. Both hues are held at the
+   line's own weight: the colour is the only thing that raises its voice. */
+.quote.up .qchange { color: #c0705f; }
+.quote.down .qchange { color: #79a883; }
+
+body.theme-light .quote.up .qchange,
+body.theme-clay .quote.up .qchange { color: #b0503f; }
+body.theme-light .quote.down .qchange,
+body.theme-clay .quote.down .qchange { color: #4c7c5b; }
+
+body.theme-pixel .quote.up .qchange { color: #c47a68; }
+body.theme-pixel .quote.down .qchange { color: #7c9b74; }
+
 .note {
   display: inline-block;
   vertical-align: middle;

@@ -449,6 +449,46 @@
     }
   }
 
+  /* The rendered width of the line. scrollWidth alone under-reports it once the
+     overflow spills off both ends of a centred line, so ask a Range for the
+     real extent and fall back to scrollWidth on very old WebKit. */
+  function metaLineWidth(metaEl) {
+    var w = 0;
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(metaEl);
+      var box = range.getBoundingClientRect();
+      w = box ? box.width : 0;
+    } catch (e) { w = 0; }
+    if (!w) { w = metaEl.scrollWidth; }
+    return w;
+  }
+
+  /* The line under the date is nowrap by design. The pixel faces and Chinese
+     set it wider than Rajdhani ever did, so on a short screen it can run off
+     both edges — the weather label alone can do it. Measure the rendered line
+     and step the type down until it sits inside the padding: a smaller line
+     still reads, a clipped index number does not.
+
+     Always starts again from the size layout() chose, so an item that goes
+     away (a failed quote, an expired note) gives the line its type back. */
+  var metaPad = 20;
+  var metaBasePx = 14;
+
+  function fitMeta() {
+    var metaEl = document.querySelector('.meta');
+    if (!metaEl) { return; }
+    var limit = metaEl.clientWidth - metaPad * 2;
+    var px = Math.round(metaBasePx);
+    var guard = 0;
+    metaEl.style.fontSize = px + 'px';
+    while (px > 11 && metaLineWidth(metaEl) > limit && guard < 24) {
+      px -= 1;
+      metaEl.style.fontSize = px + 'px';
+      guard++;
+    }
+  }
+
   function layout() {
     var W = document.documentElement.clientWidth || window.innerWidth;
     var H = document.documentElement.clientHeight || window.innerHeight;
@@ -521,6 +561,9 @@
     ruleEl.style.marginTop = Math.round(h * 0.085) + 'px';
     metaEl.style.fontSize = pix ? pixelPx(h * 0.080, 18) : Math.max(14, Math.round(h * 0.080)) + 'px';
     metaEl.style.marginTop = Math.round(h * 0.075) + 'px';
+    metaPad = pad;
+    metaBasePx = parseFloat(metaEl.style.fontSize) || 14;
+    fitMeta();
 
     /* 喜脉体 is a display face: at Rajdhani's small sizes its Chinese turns to
        mush, so the ink face keeps its quiet lines a little larger. */
@@ -667,7 +710,10 @@
   var haveWeather = false;
   var lastWeather = null;
 
-  function getJSON(url, ok, fail) {
+  /* The two readers share one XHR: getText hands back the body as it arrived,
+     getJSON parses it. iOS 9 has no fetch(), and the quote endpoint answers
+     with a JS assignment rather than JSON, so both are needed. */
+  function getText(url, ok, fail) {
     var x = new XMLHttpRequest();
     var done = false;
     function finish(fn, arg) {
@@ -678,13 +724,8 @@
     try {
       x.open('GET', url, true);
       x.onload = function () {
-        if (x.status >= 200 && x.status < 300) {
-          var data;
-          try { data = JSON.parse(x.responseText); } catch (e) { return finish(fail); }
-          finish(ok, data);
-        } else {
-          finish(fail);
-        }
+        if (x.status >= 200 && x.status < 300) { finish(ok, x.responseText); }
+        else { finish(fail); }
       };
       x.onerror = function () { finish(fail); };
       x.timeout = 12000;
@@ -693,6 +734,14 @@
     } catch (e) {
       finish(fail);
     }
+  }
+
+  function getJSON(url, ok, fail) {
+    getText(url, function (body) {
+      var data;
+      try { data = JSON.parse(body); } catch (e) { fail(); return; }
+      ok(data);
+    }, fail);
   }
 
   function showWeather(temp, code, isDay) {
@@ -783,6 +832,7 @@
 
   var haveFollowers = false;
   var lastFollowers = null;
+  var haveIndex = false;
 
   function biliSVG() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
@@ -822,14 +872,18 @@
     if (lastFollowers !== null) { showFollowers(lastFollowers); }
   }
 
-  /* One place decides where the dots go: weather · followers · note, with a dot
-     only between two things that are actually there. */
+  /* One place decides where the dots go, so a gap never shows as a stray mark:
+     weather · followers · index · note, and a dot appears before an item only
+     if something visible came before it. */
   function updateSeps() {
-    var w = haveWeather;
-    var f = haveFollowers;
-    var n = !!el('note').textContent;
-    show(el('sep'), w && f);
-    show(el('sep2'), n && (w || f));
+    var present = [haveWeather, haveFollowers, haveIndex, !!el('note').textContent];
+    var dots = [el('sep'), el('sep2'), el('sep3')];
+    var earlier = false, i;
+    for (i = 0; i < present.length; i++) {
+      if (i > 0) { show(dots[i - 1], earlier && present[i]); }
+      if (present[i]) { earlier = true; }
+    }
+    fitMeta();
   }
 
   function loadFollowers() {
@@ -838,6 +892,58 @@
       if (d && typeof d.follower === 'number' && d.follower >= 0) { showFollowers(d.follower); }
     }, function () { /* no file yet, or offline: the line just stays short */ });
     setTimeout(loadFollowers, Math.max(3, num(pick('followersEvery', 15))) * 60000);
+  }
+
+  /* -------------------------------------------------------------
+     Shanghai Composite (上证指数)
+     Tencent's quote endpoint answers with Access-Control-Allow-Origin: *, so
+     the page reads it directly — no proxy, no key, no Action, and the number
+     is as fresh as the last read. Shut, it keeps returning the last close,
+     which is what a clock on a wall should show.
+     ------------------------------------------------------------- */
+
+  /* 09:30–11:30 and 13:00–15:00, Monday to Friday. A minute between reads keeps
+     the tick alive during the session and is wasteful at three in the morning;
+     the page only samples the clock's own day, which is the market's day here. */
+  function marketOpen() {
+    var d = new Date();
+    var day = d.getDay();
+    var m = d.getHours() * 60 + d.getMinutes();
+    return day > 0 && day < 6 && ((m >= 570 && m <= 690) || (m >= 780 && m <= 900));
+  }
+
+  function paintIndex(price, change, pct) {
+    el('qlabel').textContent = lang === 'zh' ? '上证指数' : 'SSE';
+    el('qvalue').textContent = price.toFixed(2);
+    el('qchange').textContent = (change > 0 ? '+' : (change < 0 ? '-' : '')) +
+      Math.abs(pct).toFixed(2) + '%';
+    /* Shanghai paints a rise red and a fall green; the colours sit at the
+       line's own weight, so direction is legible across a room without the
+       number shouting over the clock. */
+    el('quote').className = 'quote' + (change > 0 ? ' up' : (change < 0 ? ' down' : ''));
+    show(el('quote'), true);
+    haveIndex = true;
+    updateSeps();
+  }
+
+  function loadIndex() {
+    if (pick('showIndex', true) === false) { return; }
+    /* The body is a JS assignment around a tilde record:
+         v_s_sh000001="1~上证指数~000001~3716.28~8.80~0.24~…";
+       [3] is the index, [4] the point change, [5] the percentage. The &_ suffix
+       is a cache-buster: without it Safari can answer from its own cache and
+       leave yesterday's close on the wall. */
+    var url = 'https://qt.gtimg.cn/q=s_sh000001&_=' + (new Date()).getTime();
+    getText(url, function (body) {
+      var m = /"([^"]*)"/.exec(body || '');
+      if (!m) { return; }
+      var f = m[1].split('~');
+      if (f.length < 6) { return; }
+      var price = parseFloat(f[3]), change = parseFloat(f[4]), pct = parseFloat(f[5]);
+      if (!(price > 0) || isNaN(change) || isNaN(pct)) { return; }
+      paintIndex(price, change, pct);
+    }, function () { /* offline: the line just stays short */ });
+    setTimeout(loadIndex, (marketOpen() ? 1 : Math.max(3, num(pick('indexEvery', 15)))) * 60000);
   }
 
   /* -------------------------------------------------------------
@@ -1238,6 +1344,7 @@
   applyDim();
   startWeather();
   loadFollowers();
+  loadIndex();
   startNotes();
   startDrift();
   startKeepAwake();

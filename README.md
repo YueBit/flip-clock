@@ -54,6 +54,7 @@ Open `config.js`. These are the lines worth knowing.
 | `showSeconds: true` | The small seconds pair beside the minutes. Turn it off for a calmer board. |
 | `notes: []` | The line under the date. Empty means the line does not exist — a slot you have not filled stays empty. Fill it with strings and it rotates through them every `noteEvery` minutes. |
 | `showFollowers: true` | The Bilibili follower count in the line under the date. `followersEvery` sets how often the page re-reads it (15 minutes). |
+| `showIndex: true` | The Shanghai Composite beside the followers, read live from Tencent's quote API. `indexEvery` is the gap while the market is shut (15 minutes); during the session it refreshes every minute. |
 | `tickSound: true` | One tick per second, at `tickVolume` (0.45 by default; 0 is silence). `tickSoundSet` chooses the voice. |
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the glass drops to 55% brightness. `nightDim: 0` turns that off. |
 | `animate: false` | Replaces the flip with a plain cut. Only needed if a very old iPad stutters. |
@@ -138,6 +139,34 @@ also the `mid` in the JSON) and delete `data/followers.json` so the next run
 rewrites it. Run the job by hand any time from **Actions → Bilibili followers →
 Run workflow**; if the file never updates, check **Settings → Actions → General
 → Workflow permissions** is set to *Read and write*.
+
+## Shanghai Composite (上证指数)
+
+Sits beside the followers, same line:
+
+```
+24° Overcast · 334 followers · SSE 3716.28 +0.24%
+```
+
+Unlike the follower count, this one needs no Action and no file. Tencent's
+`qt.gtimg.cn` quote endpoint answers with `Access-Control-Allow-Origin: *`, so the
+page reads it itself (`app.js`, `loadIndex`) — a plain XHR, so the iOS 9 path
+still works. The body is a JS assignment around a tilde record;
+`[3]` is the index, `[4]` the point change, `[5]` the percentage.
+
+The number is the last one the exchange printed. Outside 09:30–11:30 and
+13:00–15:00, Monday to Friday, that is the previous close, which is what the
+board on a wall should show. During the session it refreshes once a minute, the
+rest of the time every `indexEvery` minutes.
+
+The change is coloured the Shanghai way: **red for a rise, green for a fall**, at
+the line's own weight so it cannot shout over the clock. A flat market keeps the
+plain ink.
+
+To track a different instrument, change the code in `loadIndex` and the label in
+`paintIndex`: `s_sh000001` is the Shanghai Composite, `s_sz399001` Shenzhen,
+`s_sh000300` the CSI 300. If the request fails — offline, or the endpoint moves —
+the line quietly keeps the weather and the followers; nothing is made up.
 
 ## Sound
 

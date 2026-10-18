@@ -50,6 +50,14 @@ var CLOCK_CONFIG = {
   showFollowers: true,
   followersEvery: 15,   // minutes between reads of the file
 
+  // ---- Shanghai Composite (上证指数) ----
+  // Read live in the browser from Tencent's public quote endpoint, which sends
+  // Access-Control-Allow-Origin: *, so there is no proxy, no key and no Action
+  // behind it. While the market is open it refreshes every minute; shut, every
+  // indexEvery minutes — the number then shown is the last close.
+  showIndex: true,
+  indexEvery: 15,       // minutes between reads while the market is shut
+
   // ---- night dimming (screen only; it cannot touch the iPad's brightness) ----
   nightStart: 23,
   nightEnd: 7,
