@@ -25,7 +25,13 @@
      Language
      ------------------------------------------------------------- */
 
-  var lang = String(pick('lang', 'auto')).toLowerCase();
+  /* ?lang=zh on the URL wins over config.js, the same way ?theme= does: it makes
+     a Chinese board linkable (a home-screen shortcut can pin it) and gives the
+     layout a way to be checked in both languages without editing a file. */
+  var lang = (function () {
+    var m = /[?&]lang=(zh|en)\b/.exec(location.search);
+    return String(m ? m[1] : pick('lang', 'auto')).toLowerCase();
+  })();
   if (lang === 'auto') {
     var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
     lang = nav.indexOf('zh') === 0 ? 'zh' : 'en';
@@ -372,13 +378,19 @@
      Sizing — computed in px so no viewport-unit quirks on old iOS
      ------------------------------------------------------------- */
 
+  /* The Chinese face of the dark theme sets the digits in Ubuntu, whose caps are
+     taller and whose figures are wider than Rajdhani's: 0.94h fills the card the
+     way 0.92h of Rajdhani did, with the advance still inside the plate. */
+  function inkFace() { return lang === 'zh' && theme === 'dark'; }
+
   function sizeUnit(u, h) {
     /* Pixel faces are drawn on a 9-unit grid: a font size that is a multiple of
        9 (and the card height even) puts every edge of every glyph on a whole
        pixel, which is the whole point of the theme. The Twemco-style pixel
        theme leaves more air around the cap than the flat one did. */
     var w = pix ? Math.round(h * 0.58) : h * 0.58;
-    var fs = pix ? Math.max(18, Math.floor(h * 0.84 / 18) * 18) : Math.round(h * 0.92);
+    var fs = pix ? Math.max(18, Math.floor(h * 0.84 / 18) * 18)
+      : Math.round(h * (inkFace() ? 0.91 : 0.92));
     /* Plates have soft corners in the case theme and hard ones in clay. */
     var r = theme === 'pixel' ? Math.round(h * 0.028) : (pix ? 0 : Math.max(3, Math.round(h * 0.035)));
     /* Monocraft's digit sits on the pen origin (no left bearing), so centre the

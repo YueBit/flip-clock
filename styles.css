@@ -14,6 +14,33 @@
   font-style: normal;
 }
 
+/* The Chinese face of the dark theme, in the two families robodiag.cn sets:
+   Ubuntu for the digits and the Latin, Alibaba PuHuiTi for the Chinese. Both
+   are subsets of the files the site serves; licences beside them in fonts/.
+   WOFF first for iOS 9, WOFF2 for everything else. */
+@font-face {
+  font-family: "Ubuntu";
+  src: url("fonts/ubuntu-700.woff2") format("woff2"),
+       url("fonts/ubuntu-700.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Ubuntu";
+  src: url("fonts/ubuntu-400.woff2") format("woff2"),
+       url("fonts/ubuntu-400.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "PuHuiTi";
+  src: url("fonts/puhuiti-400.woff2") format("woff2"),
+       url("fonts/puhuiti-400.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+FF00-FFEF;
+}
+
 /* ---------------------------------------------------------------
    Robodiag flip clock
    Written for old Safari: no CSS custom properties, no grid, no
@@ -547,6 +574,43 @@ body.theme-light .colon i { background: #a99d87; }
 body.lang-zh .meta { letter-spacing: 0.1em; }
 body.lang-zh .wdesc { letter-spacing: 0.04em; }
 body.lang-zh .date { letter-spacing: 0.04em; }
+
+/* ---------------------------------------------------------------
+   The Chinese face of the dark theme
+
+   When the clock runs in Chinese, dark wears the type robodiag.cn sets:
+   Ubuntu for the digits and every Latin glyph, Alibaba PuHuiTi for the
+   Chinese — one voice across the numbers and the date. Only dark: light,
+   pixel and clay keep their own faces.
+   --------------------------------------------------------------- */
+
+body.theme-dark.lang-zh,
+body.theme-dark.lang-zh .facet span,
+body.theme-dark.lang-zh .date,
+body.theme-dark.lang-zh .meta,
+body.theme-dark.lang-zh .period,
+body.theme-dark.lang-zh .hint,
+body.theme-dark.lang-zh .toast {
+  font-family: "Ubuntu", "PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0;
+}
+
+body.theme-dark.lang-zh .facet span {
+  font-weight: 700;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark.lang-zh .date {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+body.theme-dark.lang-zh .meta,
+body.theme-dark.lang-zh .period,
+body.theme-dark.lang-zh .hint,
+body.theme-dark.lang-zh .toast {
+  font-weight: 400;
+}
 body.theme-light .date { color: #2c2721; text-shadow: none; }
 body.theme-light .rule { background: rgba(70, 58, 40, 0.16); }
 body.theme-light .meta { color: #837866; }

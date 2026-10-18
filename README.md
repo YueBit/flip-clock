@@ -22,10 +22,11 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
 | `soundlab.html` | tap-to-compare page for choosing a sound |
-| `fonts/` | Rajdhani and Monocraft, cut down to ASCII and shipped as WOFF |
+| `fonts/` | Rajdhani, Monocraft, and the Chinese pair Ubuntu + Alibaba PuHuiTi, each cut down to the characters the clock prints |
 | `keep-awake.mp4` | a two-pixel silent loop that asks iOS not to sleep |
 | `icon.svg`, `apple-touch-icon.png` | tab icon, home-screen icon |
 | `tools/make-sounds.py` | rebuilds the sound sets from their parameters |
+| `tools/make-zh-fonts.sh` | re-subsets the Chinese fonts after editing Chinese copy |
 
 ## Run it
 
@@ -46,7 +47,7 @@ Open `config.js`. These are the lines worth knowing.
 | --- | --- |
 | `city: 'Hangzhou'` | **Change this first.** Weather comes from Open-Meteo by place name, no key needed. If two places share the name, set `lat` and `lon` instead. |
 | `weatherEvery: 15` | Minutes between weather refreshes. |
-| `lang: 'en'` | `'en'` for English only, `'zh'` for Chinese, `'auto'` to copy the iPad. |
+| `lang: 'en'` | `'en'` for English only, `'zh'` for Chinese, `'auto'` to copy the iPad. `?lang=zh` on the URL overrides it for one load. |
 | `theme: 'dark'` | The theme the clock starts in: `'dark'` is charcoal and cream, `'light'` is paper and ink, `'pixel'` is a Twemco-style flip clock (charcoal case, white caps), `'clay'` is terracotta on cream paper. |
 | `swipeThemes: true` | Swipe left or right anywhere on the glass to change the theme. `false` pins the clock to `theme` and ignores swipes. |
 | `hour12: false` | `true` switches to a 12-hour face with a small AM/PM. |
@@ -90,6 +91,26 @@ smaller and quieter at the right. The case is measured to the cards in
 `clay` is a flat block print: terracotta plates, a hard 4px bevel, square
 corners and an 8px grid of hairlines behind it, in the warm colours of the
 Claude palette.
+
+### The Chinese dark face
+
+Set `lang: 'zh'` (or add `?lang=zh` to the URL) and the dark theme is set in the
+type robodiag.cn uses: **Ubuntu** for the digits and every Latin glyph, **Alibaba
+PuHuiTi** for the Chinese in the date and the weather line. Both are self-hosted
+subsets — Ubuntu's figures are what the site's numbers look like, and PuHuiTi
+carries the 47 characters this clock prints, so the pair costs about 20 KB
+instead of the megabytes of the full families. Licences: `fonts/Ubuntu-LICENSE.txt`
+and `fonts/LICENSE-puhuiti.txt`.
+
+The digits are not in a separate display face on purpose: the same Ubuntu Bold
+that draws the numbers draws the "334" in the follower count, so the time and the
+small print read as one hand. `layout()` sets the card's type at `0.91h` for this
+face instead of Rajdhani's `0.92h`, because Ubuntu's caps are taller and its
+figures are wider (0.568 em against Rajdhani's 0.50) — at that size the advance
+still fits inside a `0.58h` card with the ink centred.
+
+Light, pixel and clay keep their own faces in Chinese; only dark changes, since
+that is the one that sits next to the site's own pages.
 
 `swipeThemes: false` pins the clock to the `theme` it was built with.
 
@@ -197,5 +218,6 @@ hides itself and the clock carries on without it.
 | The screen sleeps | Step 4 above. Confirm Auto-Lock really says `Never`. |
 | The flip stutters | `animate: false` in `config.js`. |
 | The theme is not the one set in `config.js` | A swipe is remembered on that device and wins over the config. `?theme=dark`, `?theme=light`, `?theme=pixel` or `?theme=clay` pins it for that load. |
+| Chinese text shows in a different face from the digits | A character was added to the copy after the font was cut. Run `tools/make-zh-fonts.sh`; it collects every Chinese character in the source and fails if one has no glyph. |
 | Swiping does nothing | The drag has to be mostly horizontal and at least 55px. Check `swipeThemes` is not `false`. |
 | No tick sound | Tap the page once, and check the side switch is not set to mute. |

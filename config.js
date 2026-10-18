@@ -4,6 +4,8 @@
 var CLOCK_CONFIG = {
 
   // 'en' English only (default). 'zh' Chinese, 'auto' follows the iPad's language.
+  // Chinese also brings the site's own type to the dark theme (Ubuntu digits,
+  // Alibaba PuHuiTi Chinese). ?lang=zh on the URL overrides this for one load.
   lang: 'en',
 
   // false = 24-hour clock (09:41), true = 12-hour with a small AM/PM
