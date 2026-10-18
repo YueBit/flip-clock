@@ -33,12 +33,21 @@
   font-style: normal;
 }
 @font-face {
-  font-family: "PuHuiTi";
-  src: url("fonts/puhuiti-400.woff2") format("woff2"),
-       url("fonts/puhuiti-400.woff") format("woff");
+  font-family: "XiMaiTi";
+  src: url("fonts/ximaiti-400.woff2") format("woff2"),
+       url("fonts/ximaiti-400.woff") format("woff");
   font-weight: 400;
   font-style: normal;
-  unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+FF00-FFEF;
+}
+/* The same file again, declared bold: the digits ask for 700 so that if this
+   face ever fails to load the Ubuntu Bold behind it takes over instead of a
+   synthetic bold smeared over whichever face did load. */
+@font-face {
+  font-family: "XiMaiTi";
+  src: url("fonts/ximaiti-400.woff2") format("woff2"),
+       url("fonts/ximaiti-400.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
 }
 
 /* ---------------------------------------------------------------
@@ -578,10 +587,10 @@ body.lang-zh .date { letter-spacing: 0.04em; }
 /* ---------------------------------------------------------------
    The Chinese face of the dark theme
 
-   When the clock runs in Chinese, dark wears the type robodiag.cn sets:
-   Ubuntu for the digits and every Latin glyph, Alibaba PuHuiTi for the
-   Chinese — one voice across the numbers and the date. Only dark: light,
-   pixel and clay keep their own faces.
+   When the clock runs in Chinese, dark is set in 字制区喜脉体, the display face
+   robodiag.cn sets its titles in — the digits included, because that face
+   carries its own Latin. Ubuntu stays behind it for anything the subset lacks.
+   Only dark: light, pixel and clay keep their own faces.
    --------------------------------------------------------------- */
 
 body.theme-dark.lang-zh,
@@ -591,13 +600,13 @@ body.theme-dark.lang-zh .meta,
 body.theme-dark.lang-zh .period,
 body.theme-dark.lang-zh .hint,
 body.theme-dark.lang-zh .toast {
-  font-family: "Ubuntu", "PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
   letter-spacing: 0;
 }
 
 body.theme-dark.lang-zh .facet span {
   font-weight: 700;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 
 body.theme-dark.lang-zh .date {

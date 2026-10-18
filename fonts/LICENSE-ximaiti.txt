@@ -1,0 +1,22 @@
+字制区喜脉体 2.00 (ZiZhiQu XiMaiTi) — the display face robodiag.cn sets its
+headings and wordmark in.
+
+Source: the author's package, redistributed by 猫啃网 (maoken.com) with the
+author's permission:
+https://oss.maoken.com/猫啃字体/中国大陆/字制区喜脉体2.000_猫啃网.zip
+
+Terms, as stated in 字制区喜脉体授权声明.rtf inside that package:
+  1、允许任何个人和企业免费使用，包括商用用途，但禁止用于违法用途!
+  2、字制区喜脉体版权归属字制区（fontqu.com）未经授权，任何人和第三方媒介不得上传、
+     发布、转载字体文件，禁止售卖。
+  3、为确保字体文件不被篡改，请务必从字制区官方指定通道下载。
+
+Free for any individual or company to use, including commercially; not for
+illegal use; the copyright stays with 字制区 (fontqu.com), and third parties may
+not republish or sell the font *files*. 字制区's own site has since closed and
+their later notice states the font is free for commercial use and supports
+embedding. The file here is a 147-glyph subset (the characters this clock prints,
+plus ASCII) embedded by this page — use, not redistribution as a font.
+
+Subset: pyftsubset 字制区喜脉体.ttf --text-file=ximai-chars.txt --flavor=woff2
+        --no-hinting --desubroutinize

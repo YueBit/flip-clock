@@ -22,7 +22,7 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
 | `soundlab.html` | tap-to-compare page for choosing a sound |
-| `fonts/` | Rajdhani, Monocraft, and the Chinese pair Ubuntu + Alibaba PuHuiTi, each cut down to the characters the clock prints |
+| `fonts/` | Rajdhani, Monocraft, and the Chinese face 字制区喜脉体 with Ubuntu behind it, each cut down to the characters the clock prints |
 | `keep-awake.mp4` | a two-pixel silent loop that asks iOS not to sleep |
 | `icon.svg`, `apple-touch-icon.png` | tab icon, home-screen icon |
 | `tools/make-sounds.py` | rebuilds the sound sets from their parameters |
@@ -94,20 +94,23 @@ Claude palette.
 
 ### The Chinese dark face
 
-Set `lang: 'zh'` (or add `?lang=zh` to the URL) and the dark theme is set in the
-type robodiag.cn uses: **Ubuntu** for the digits and every Latin glyph, **Alibaba
-PuHuiTi** for the Chinese in the date and the weather line. Both are self-hosted
-subsets — Ubuntu's figures are what the site's numbers look like, and PuHuiTi
-carries the 47 characters this clock prints, so the pair costs about 20 KB
-instead of the megabytes of the full families. Licences: `fonts/Ubuntu-LICENSE.txt`
-and `fonts/LICENSE-puhuiti.txt`.
+Set `lang: 'zh'` (or add `?lang=zh` to the URL) and the dark theme is set in
+**字制区喜脉体**, the display face robodiag.cn titles its pages and its wordmark
+with. The digits are 喜脉体's own — it carries a Latin alphabet, so the time, the
+date and the small print are all one hand rather than a display number over body
+text. Ubuntu stays behind it in the stack, so anything outside the subset still
+lands on the site's other face.
 
-The digits are not in a separate display face on purpose: the same Ubuntu Bold
-that draws the numbers draws the "334" in the follower count, so the time and the
-small print read as one hand. `layout()` sets the card's type at `0.91h` for this
-face instead of Rajdhani's `0.92h`, because Ubuntu's caps are taller and its
-figures are wider (0.568 em against Rajdhani's 0.50) — at that size the advance
-still fits inside a `0.58h` card with the ink centred.
+The file is a 149-glyph subset: the characters this clock can print, plus ASCII,
+cut from the 3.5 MB family. `tools/make-zh-fonts.sh` rebuilds it and fails if a
+character in the copy has no glyph. Licence: `fonts/LICENSE-ximaiti.txt`.
+
+`layout()` sets the card's type at `0.90h` for this face instead of Rajdhani's
+`0.92h`: 喜脉体's figures advance 0.60 em against Rajdhani's 0.50 and its ink runs
+0.77 em high, so at 0.90h the digit fills a `0.58h` card with the advance still
+inside the plate and the ink centred to within a pixel or two. The hint at the
+bottom is set two points larger than in the other themes, because a display face
+at 15 px stops being readable.
 
 Light, pixel and clay keep their own faces in Chinese; only dark changes, since
 that is the one that sits next to the site's own pages.

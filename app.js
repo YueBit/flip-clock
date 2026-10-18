@@ -378,9 +378,10 @@
      Sizing — computed in px so no viewport-unit quirks on old iOS
      ------------------------------------------------------------- */
 
-  /* The Chinese face of the dark theme sets the digits in Ubuntu, whose caps are
-     taller and whose figures are wider than Rajdhani's: 0.94h fills the card the
-     way 0.92h of Rajdhani did, with the advance still inside the plate. */
+  /* The Chinese face of the dark theme sets the digits in 喜脉体, the display
+     face robodiag.cn titles with. Its figures advance 0.60 em against Rajdhani's
+     0.50 and its ink reaches 0.80 em, so 0.90h fills the plate the way 0.92h of
+     Rajdhani did and still leaves the advance inside the card. */
   function inkFace() { return lang === 'zh' && theme === 'dark'; }
 
   function sizeUnit(u, h) {
@@ -390,7 +391,7 @@
        theme leaves more air around the cap than the flat one did. */
     var w = pix ? Math.round(h * 0.58) : h * 0.58;
     var fs = pix ? Math.max(18, Math.floor(h * 0.84 / 18) * 18)
-      : Math.round(h * (inkFace() ? 0.91 : 0.92));
+      : Math.round(h * (inkFace() ? 0.90 : 0.92));
     /* Plates have soft corners in the case theme and hard ones in clay. */
     var r = theme === 'pixel' ? Math.round(h * 0.028) : (pix ? 0 : Math.max(3, Math.round(h * 0.035)));
     /* Monocraft's digit sits on the pen origin (no left bearing), so centre the
@@ -521,13 +522,16 @@
     metaEl.style.fontSize = pix ? pixelPx(h * 0.080, 18) : Math.max(14, Math.round(h * 0.080)) + 'px';
     metaEl.style.marginTop = Math.round(h * 0.075) + 'px';
 
+    /* 喜脉体 is a display face: at Rajdhani's small sizes its Chinese turns to
+       mush, so the ink face keeps its quiet lines a little larger. */
+    var small = inkFace() ? Math.max(17, Math.round(h * 0.058)) : 0;
     var hintEl = el('hint');
     if (hintEl) {
-      hintEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : Math.max(13, Math.round(h * 0.052)) + 'px';
+      hintEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : (small || Math.max(13, Math.round(h * 0.052))) + 'px';
     }
     var toastEl = el('toast');
     if (toastEl) {
-      toastEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : Math.max(13, Math.round(h * 0.052)) + 'px';
+      toastEl.style.fontSize = pix ? pixelPx(h * 0.052, 18) : (small || Math.max(13, Math.round(h * 0.052))) + 'px';
     }
 
     if (hour12) {
