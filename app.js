@@ -46,7 +46,10 @@
           this.weekdays[d.getDay()];
       },
       weatherError: '',
-      tapHint: '轻触屏幕开启声音'
+      tapHint: '轻触屏幕开启声音',
+      boxLabel: '音乐盒',
+      boxClose: '左右滑动关闭',
+      boxHint: '左右滑动开启音乐盒'
     },
     en: {
       weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -57,7 +60,10 @@
           this.months[d.getMonth()] + ' ' + d.getFullYear();
       },
       weatherError: '',
-      tapHint: 'Tap the screen for sound'
+      tapHint: 'Tap the screen for sound',
+      boxLabel: 'Music box',
+      boxClose: 'Swipe across to close',
+      boxHint: 'Swipe across for the music box'
     }
   }[lang];
 
@@ -386,6 +392,8 @@
       hintEl.style.fontSize = Math.max(17, Math.round(h * 0.058)) + 'px';
     }
 
+    sizeBox();
+
     if (hour12) {
       periodEl.style.fontSize = Math.max(10, Math.round(h * 0.075)) + 'px';
       periodEl.style.marginLeft = Math.round(h * 0.05) + 'px';
@@ -461,6 +469,8 @@
     lastSecond = second;
 
     if (hour12 && periodEl.textContent !== period) { periodEl.textContent = period; }
+
+    if (mb.open) { paintBoxTime(hs, ms, ss, d); }
 
     var minute = d.getHours() * 60 + d.getMinutes();
     if (minute !== lastMinute || fresh) {
@@ -830,18 +840,24 @@
       b.muted = true; b.play(); b.pause(); b.muted = false;
       sound.fallback = { tick: a, tock: b };
       hideHint();
+      hintSwipe();
     } catch (e) { }
   }
 
   function armSound() {
-    if (!sound.on) { return; }
     var ctx = audioCtx();
+    /* the music box needs a running context whether or not the tick is on */
+    if (ctx && ctx.state === 'suspended' && ctx.resume) {
+      try { ctx.resume(); } catch (e) { }
+    }
+    if (!sound.on) { return; }
     if (!ctx) { fallbackArm(); return; }
 
     function start() {
       sound.ready = true;
       loadClips();
       hideHint();
+      hintSwipe();
       confirmTick();
     }
 
@@ -857,6 +873,7 @@
 
   function playTick(second) {
     if (!sound.on || document.hidden === true) { return; }
+    if (mb.open) { return; }   /* the box is the sound while it is up */
     var name = (second % 2 === 0) ? 'tick' : 'tock';
 
     if (sound.ctx && sound.buffers[name]) {
@@ -896,6 +913,21 @@
     var h = el('hint');
     if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
     if (h) { h.className = 'hint'; }
+  }
+
+  /* A second line, once the tick is armed: the glass also opens the music box. */
+  var swipeHintShown = false;
+  function showSwipeHint() {
+    var h = el('hint');
+    if (!h || !mb.enabled) { return; }
+    h.textContent = L.boxHint;
+    h.className = 'hint show';
+    hintTimer = setTimeout(hideHint, 18000);
+  }
+  function hintSwipe() {
+    if (swipeHintShown || !mb.enabled) { return; }
+    swipeHintShown = true;
+    setTimeout(showSwipeHint, 2400);
   }
 
   /* -------------------------------------------------------------
@@ -954,12 +986,347 @@
   }
 
   /* -------------------------------------------------------------
+     The music box — a swipe across the glass brings it up.
+
+     The tune lives in melody.js: a list of [beat, note, beats,
+     velocity]. The same list plays the sound and draws the panel, so
+     a note is one pin on the drum, one tooth of the comb and one
+     pluck of the keyboard, and nothing can drift out of step.
+     ------------------------------------------------------------- */
+
+  var TUNE = window.MUSIC_BOX_TUNE || null;
+
+  var mb = {
+    enabled: pick('musicBox', true) !== false && !!TUNE && !!TUNE.notes && TUNE.notes.length > 0,
+    open: false,
+    built: false,
+    notes: null,
+    lo: 60,
+    hi: 72,
+    teeth: null,
+    ctx: null,
+    master: null,
+    at: 0,
+    start: 0,
+    beatSec: 0.68,
+    nextAudio: 0,
+    nextPaint: 0,
+    timer: null,
+    endTimer: null,
+    volume: Math.min(1, Math.max(0, num(pick('musicBoxVolume', 0.5))))
+  };
+
+  /* 'A4' -> 69, the note number middle A is 69. */
+  var NOTE_STEP = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  function midiOf(name) {
+    var m = /^([A-G])([#b]?)(-?\d+)$/.exec(name);
+    if (!m) { return 0; }
+    return NOTE_STEP[m[1]] + (m[2] === '#' ? 1 : (m[2] === 'b' ? -1 : 0)) +
+      (parseInt(m[3], 10) + 1) * 12;
+  }
+
+  function mbPrepare() {
+    if (!TUNE || mb.notes) { return; }
+    var out = [], i, n, m, lo = 999, hi = -999;
+    for (i = 0; i < TUNE.notes.length; i++) {
+      n = TUNE.notes[i];
+      if (!n || n.length < 2) { continue; }
+      m = midiOf(String(n[1]));
+      if (!m) { continue; }
+      out.push({ b: num(n[0]), midi: m, v: n.length > 3 ? num(n[3]) : 0.8 });
+      if (m < lo) { lo = m; }
+      if (m > hi) { hi = m; }
+    }
+    out.sort(function (a, b) { return a.b - b.b; });
+    mb.notes = out;
+    mb.lo = lo;
+    mb.hi = hi;
+  }
+
+  /* One drawn music box: a helical row of pins on the drum, a graded comb under
+     it, a winding key on the side. Built once, on the first swipe. */
+  function mbBuild() {
+    var pins = el('boxpins'), comb = el('boxcomb');
+    if (!mb.enabled || !pins || !comb || mb.built) { return; }
+    mb.built = true;
+
+    var rows = [13, 31, 49, 67, 85], html = '', i, j, copy, left;
+    for (copy = 0; copy < 2; copy++) {
+      for (i = 0; i < 26; i++) {
+        for (j = 0; j < rows.length; j++) {
+          /* each copy fills half the layer, so translateX(-50%) loops cleanly */
+          left = copy * 50 + (i / 26) * 46 + j * 0.9;
+          html += '<i style="left:' + left.toFixed(2) + '%;top:' + rows[j] + '%"></i>';
+        }
+      }
+    }
+    pins.innerHTML = html;
+
+    /* The comb is graded: the long teeth on the left carry the low notes, which
+       is also how a real comb is filed. */
+    var n = 16, teeth = '';
+    for (i = 0; i < n; i++) {
+      left = (i * (100 - 2.2)) / (n - 1);
+      teeth += '<i style="left:' + left.toFixed(2) + '%;height:' +
+        (96 - (i / (n - 1)) * 62).toFixed(1) + '%"></i>';
+    }
+    comb.innerHTML = teeth;
+    mb.teeth = comb.getElementsByTagName('i');
+  }
+
+  /* A struck tine: a sine fundamental with the two inharmonic partials that
+     make a music box ring rather than beep, and a long tail on the long teeth. */
+  function mbPluck(midi, when) {
+    var ctx = mb.ctx;
+    if (!ctx || !mb.master) { return; }
+    var f = 440 * Math.pow(2, (midi - 69) / 12);
+    var parts = [[1, 1], [2.004, 0.2], [3.01, 0.07], [4.9, 0.035]];
+    var amp = (midi < 55 ? 0.16 : 0.11);
+    var ring = midi < 50 ? 2.6 : (midi < 60 ? 2.1 : (midi > 74 ? 1.2 : 1.7));
+    var i, o, g, when2;
+    for (i = 0; i < parts.length; i++) {
+      try {
+        o = ctx.createOscillator();
+        g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f * parts[i][0];
+        when2 = when + i * 0.002;
+        g.gain.setValueAtTime(0.0001, when2);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0003, amp * parts[i][1]), when2 + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, when2 + ring * (1 - i * 0.1));
+        o.connect(g);
+        g.connect(mb.master);
+        o.start(when2);
+        o.stop(when2 + ring + 0.05);
+      } catch (e) { }
+    }
+  }
+
+  /* Light the tooth the pitch belongs to. */
+  function mbHit(midi) {
+    if (!mb.teeth || !mb.teeth.length) { return; }
+    var span = Math.max(1, mb.hi - mb.lo);
+    var idx = Math.round(((midi - mb.lo) / span) * (mb.teeth.length - 1));
+    if (idx < 0) { idx = 0; }
+    if (idx > mb.teeth.length - 1) { idx = mb.teeth.length - 1; }
+    var t = mb.teeth[idx];
+    if (!t) { return; }
+    if (t.__at) { clearTimeout(t.__at); }
+    t.className = 'hit';
+    t.__at = setTimeout(function () { t.className = ''; t.__at = null; }, 240);
+  }
+
+  function mbStep() {
+    if (!mb.open || !mb.notes) { return; }
+    var ctx = mb.ctx, n, until, elapsed;
+
+    /* audio runs a little ahead of the clock, the drawing keeps the wall clock */
+    if (ctx && mb.master) {
+      until = ctx.currentTime + 0.45;
+      while (mb.nextAudio < mb.notes.length &&
+             mb.at + mb.notes[mb.nextAudio].b * mb.beatSec < until) {
+        n = mb.notes[mb.nextAudio];
+        mbPluck(n.midi, mb.at + n.b * mb.beatSec);
+        mb.nextAudio++;
+      }
+    }
+
+    elapsed = ((new Date()).getTime() - mb.start) / 1000;
+    while (mb.nextPaint < mb.notes.length &&
+           mb.notes[mb.nextPaint].b * mb.beatSec <= elapsed) {
+      mbHit(mb.notes[mb.nextPaint].midi);
+      mb.nextPaint++;
+    }
+
+    /* The box puts itself away once the last note has rung out. */
+    if (!mb.endTimer && mb.nextPaint >= mb.notes.length) {
+      var left = (mb.notes[mb.notes.length - 1].b * mb.beatSec) + 3.4 - elapsed;
+      mb.endTimer = setTimeout(closeBox, Math.max(500, Math.round(left * 1000)));
+    }
+  }
+
+  function startTune() {
+    mbPrepare();
+    mbBuild();
+    mb.beatSec = 60 / Math.max(30, num(TUNE.tempo) || 88);
+
+    var ctx = audioCtx();
+    mb.ctx = ctx;
+    if (ctx) {
+      if (!mb.master) {
+        try {
+          mb.master = ctx.createGain();
+          mb.master.connect(ctx.destination);
+        } catch (e) { mb.master = null; }
+      }
+      if (mb.master) {
+        try { mb.master.gain.setValueAtTime(mb.volume, ctx.currentTime); } catch (e) { }
+      }
+      /* iOS 9 has no resume(); every newer build has one and wants it called
+         from inside the gesture that the swipe already was. */
+      if (ctx.state === 'suspended' && ctx.resume) {
+        try {
+          var p = ctx.resume();
+          if (p && typeof p.then === 'function') { p.then(function () { }, function () { }); }
+        } catch (e) { }
+      }
+      mb.at = ctx.currentTime + 0.3;
+    }
+
+    mb.start = (new Date()).getTime() + 300;
+    mb.nextAudio = 0;
+    mb.nextPaint = 0;
+    if (mb.timer) { clearInterval(mb.timer); }
+    mb.timer = setInterval(mbStep, 90);
+    mbStep();
+  }
+
+  function stopTune() {
+    if (mb.timer) { clearInterval(mb.timer); mb.timer = null; }
+    if (mb.endTimer) { clearTimeout(mb.endTimer); mb.endTimer = null; }
+    /* fade rather than cut: the notes already ringing have tails */
+    if (mb.master && mb.ctx && mb.ctx.currentTime) {
+      try {
+        var t = mb.ctx.currentTime;
+        mb.master.gain.cancelScheduledValues(t);
+        mb.master.gain.setValueAtTime(mb.master.gain.value, t);
+        mb.master.gain.linearRampToValueAtTime(0.0001, t + 0.6);
+      } catch (e) { }
+    }
+    mb.nextAudio = 0;
+    mb.nextPaint = 0;
+  }
+
+  function paintBoxTime(hs, ms, ss, d) {
+    var t = el('boxtime'), s = el('boxsecs'), w = el('boxwhen'), ampm = el('boxperiod');
+    if (!t) { return; }
+    var hhmm = hs + ':' + ms;
+    if (t.textContent !== hhmm) { t.textContent = hhmm; }
+    if (s && s.textContent !== ss) { s.textContent = ss; }
+    if (ampm) {
+      var p = hour12 ? (d.getHours() < 12 ? 'AM' : 'PM') : '';
+      if (ampm.textContent !== p) { ampm.textContent = p; }
+    }
+    if (w) {
+      var when = L.date(d);
+      if (w.textContent !== when) { w.textContent = when; }
+    }
+    var box = el('box');
+    if (box) { box.setAttribute('aria-label', hhmm + ', ' + L.date(d)); }
+  }
+
+  function paintBoxLabels() {
+    var k = el('boxkicker'), c = el('boxclose'), t = el('boxtune');
+    if (k) { k.textContent = L.boxLabel; }
+    if (c) { c.textContent = L.boxClose; }
+    if (t) { t.textContent = TUNE.title || L.boxLabel; }
+  }
+
+  function openBox() {
+    var box = el('box');
+    if (!mb.enabled || mb.open || !box) { return; }
+    mb.open = true;
+    box.className = 'box on';
+    box.removeAttribute('aria-hidden');
+    hideHint();
+    startTune();
+    tick(false);
+  }
+
+  function closeBox() {
+    var box = el('box');
+    if (!mb.open || !box) { return; }
+    mb.open = false;
+    box.className = 'box';
+    box.setAttribute('aria-hidden', 'true');
+    stopTune();
+  }
+
+  /* The card is sized in px from the glass and everything inside it is in em,
+     so one number keeps the time, the drawing and the caption in proportion. */
+  function sizeBox() {
+    var card = el('boxcard');
+    if (!card || !mb.enabled) { return; }
+    var W = document.documentElement.clientWidth || window.innerWidth;
+    var H = document.documentElement.clientHeight || window.innerHeight;
+    var portrait = H > W;
+    card.style.width = Math.round(W * (portrait ? 0.84 : 0.62)) + 'px';
+    card.style.fontSize = Math.max(9, Math.round(H * 0.0215)) + 'px';
+  }
+
+  /* A swipe is a horizontal drag of at least 55px that is not mostly vertical
+     and does not take a second. A tap stays a tap: the tap is what arms the
+     sound. */
+  var drag = { x: 0, y: 0, t: 0, live: false };
+
+  function dragStart(x, y) {
+    drag.x = x;
+    drag.y = y;
+    drag.t = (new Date()).getTime();
+    drag.live = true;
+  }
+
+  function dragEnd(x, y) {
+    if (!drag.live) { return; }
+    drag.live = false;
+    var dx = x - drag.x;
+    var dy = y - drag.y;
+    var ms = (new Date()).getTime() - drag.t;
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.5 || ms > 900) { return; }
+    if (mb.open) { closeBox(); }
+    else { openBox(); }
+  }
+
+  if (mb.enabled) {
+    /* A horizontal swipe must belong to the clock, not to Safari's own back
+       gesture: that needs a cancelable touchmove. Modern Safari makes
+       document-level move listeners passive unless told otherwise, while iOS 9
+       has no options object at all and is non-passive by default. */
+    var PASSIVE = false;
+    try {
+      var probe = Object.defineProperty({}, 'passive', {
+        get: function () { PASSIVE = true; return false; }
+      });
+      window.addEventListener('flipclock-probe', null, probe);
+      window.removeEventListener('flipclock-probe', null, probe);
+    } catch (e) { PASSIVE = false; }
+
+    document.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { drag.live = false; return; }
+      dragStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, false);
+    document.addEventListener('touchmove', function (e) {
+      if (e.touches.length !== 1) { drag.live = false; return; }
+      if (!drag.live) { return; }
+      var t = e.touches[0];
+      var dx = t.clientX - drag.x;
+      var dy = t.clientY - drag.y;
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2 && e.cancelable) {
+        e.preventDefault();
+      }
+    }, PASSIVE ? { passive: false } : false);
+    document.addEventListener('touchend', function (e) {
+      var t = e.changedTouches && e.changedTouches[0];
+      if (t) { dragEnd(t.clientX, t.clientY); }
+    }, false);
+    document.addEventListener('touchcancel', function () { drag.live = false; }, false);
+
+    document.addEventListener('mousedown', function (e) { dragStart(e.clientX, e.clientY); }, false);
+    document.addEventListener('mouseup', function (e) { dragEnd(e.clientX, e.clientY); }, false);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.keyCode === 27 && mb.open) { closeBox(); }
+    }, false);
+  }
+
+  /* -------------------------------------------------------------
      One face — charcoal cards, cream 喜脉体, both languages.
      ------------------------------------------------------------- */
 
   function applyFace() {
     document.body.className = 'theme-dark lang-' + lang;
     document.documentElement.lang = (lang === 'zh') ? 'zh-CN' : 'en';
+    if (mb.enabled) { paintBoxLabels(); }
     layout();
     tick(true);
     /* The shipped face is a webfont that may not have arrived yet; measure the
@@ -973,6 +1340,8 @@
      ------------------------------------------------------------- */
 
   applyFace();
+  mbPrepare();
+  mbBuild();
 
   layout();
   tick(true);
@@ -984,6 +1353,9 @@
   startDrift();
   startKeepAwake();
   setTimeout(showHint, 1500);
+  /* With the tick off there is no tap to arm, so the swipe hint comes up on its
+     own after the board has settled. */
+  if (sound.on !== true) { setTimeout(showSwipeHint, 6000); swipeHintShown = true; }
 
   setTimeout(function () { tick(true); }, 400);
   loop();

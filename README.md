@@ -18,6 +18,7 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `styles.css` | every card, seam and shadow you see |
 | `app.js` | time, the flip, weather, sound, night dimming |
 | `config.js` | the only file you need to open |
+| `melody.js` | the tune the music box plays, as notes |
 | `data/followers.json` | Bilibili follower count, refreshed by a GitHub Action |
 | `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
@@ -55,6 +56,8 @@ Open `config.js`. These are the lines worth knowing.
 | `showIndex: true` | The Shanghai Composite beside the followers, read live from Tencent's quote API. `indexEvery` is the gap while the market is shut (15 minutes); during the session it refreshes every minute. |
 | `tickSound: true` | One tick per second, at `tickVolume` (0.45 by default; 0 is silence). `tickSoundSet` chooses the voice. |
 | `nightStart` / `nightEnd` / `nightDim` | From 23:00 to 07:00 the glass drops to 55% brightness. `nightDim: 0` turns that off. |
+| `musicBox: true` | Swipe across the glass and the clock becomes a music box: the time, and a tune played on a comb. It plays once and puts itself away; a swipe closes it early. |
+| `musicBoxVolume: 0.5` | The music box's own level. `0` keeps it silent — the drum still turns and the teeth still flash. |
 | `animate: false` | Replaces the flip with a plain cut. Only needed if a very old iPad stutters. |
 | `drift: false` | Nudges the layout a few pixels every four minutes, so the panel never holds one image for weeks. Off by default: the redraw it forces can flash the cards on old hardware, and an LCD is not what burns in. |
 
@@ -68,7 +71,7 @@ the same hand rather than a display number over body text. Ubuntu stays behind i
 in the stack, so anything outside the subset still lands on the site's other
 face.
 
-The file is a 149-glyph subset: the characters this clock can print, plus ASCII,
+The file is a 164-glyph subset: the characters this clock can print, plus ASCII,
 cut from the 3.5 MB family. `tools/make-zh-fonts.sh` rebuilds it and fails if a
 character in the copy has no glyph. Licence: `fonts/LICENSE-ximaiti.txt`.
 
@@ -80,6 +83,25 @@ because a display face at 15 px stops being readable.
 
 Set `lang: 'zh'` for Chinese, or add `?lang=zh` to the URL — the same board,
 linkable, which is also how a home-screen shortcut pins a language.
+
+## The music box
+
+Swipe across the glass and the clock gives way to a brass box: the same time,
+larger, and under it a drum covered in pins travelling past a graded comb, with
+the winding key turning at the side. The tune is played by Web Audio — the same
+context as the tick, which stands down while the box is up, so there is one sound
+at a time. Each note plucks the tooth its pitch belongs to, so the drawing is the
+performance rather than an animation next to it.
+
+One pass of the waltz is 24 seconds; the box fades itself out 3 seconds after the
+last note. Any swipe closes it sooner, and `Esc` does the same on a desktop.
+
+The tune is `melody.js`: a list of `[beat, note, beats, velocity]`, three beats to
+the bar. Replace it with your own and the drawing follows — each note gets a pin
+and a tooth. **Only put music there that you have the right to use.** The waltz
+shipped here was written for this clock; a published song is somebody's
+copyright, and its notes in this file would be a copy of the composition, not a
+recording of it.
 
 ## Bilibili followers
 
@@ -212,3 +234,6 @@ hides itself and the clock carries on without it.
 | The flip stutters | `animate: false` in `config.js`. |
 | Chinese text shows in a different face from the digits | A character was added to the copy after the font was cut. Run `tools/make-zh-fonts.sh`; it collects every Chinese character in the source and fails if one has no glyph. |
 | No tick sound | Tap the page once, and check the side switch is not set to mute. |
+| Nothing happens when I swipe | `musicBox: false` turns the box off. The drag has to be mostly horizontal, at least 55 px, and under a second. On iOS the page has to be touched once before it may make a sound. |
+| The music box is silent | `musicBoxVolume` is 0, or the page has not been touched since it loaded — iOS starts every page without audio permission. |
+| The music box shows a different tune | You edited `melody.js`. It is read at load; reload the page. |

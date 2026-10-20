@@ -12,6 +12,13 @@ var CLOCK_CONFIG = {
   // false = 24-hour clock (09:41), true = 12-hour with a small AM/PM
   hour12: false,
 
+  // ---- the music box ----
+  // Swipe across the glass and the clock gives way to a mechanical music box:
+  // the time, and a tune played on a comb. It plays once and puts itself away;
+  // a swipe closes it early. The tune is melody.js — read the note there.
+  musicBox: true,
+  musicBoxVolume: 0.5,   // 0 = silent, the box still draws and turns
+
   // Show the small seconds pair next to the minutes
   showSeconds: true,
 

@@ -48,12 +48,37 @@
     </div>
   </div>
 
+  <div class="box" id="box" aria-hidden="true">
+    <div class="box-veil"></div>
+    <div class="box-slot">
+      <div class="box-card" id="boxcard">
+        <span class="box-kicker" id="boxkicker">Music box</span>
+        <div class="box-clock"><span class="box-hhmm" id="boxtime">--:--</span><span class="box-ss" id="boxsecs">--</span><span class="box-period" id="boxperiod"></span></div>
+        <div class="box-when" id="boxwhen"></div>
+        <div class="box-stage">
+          <div class="box-case">
+            <div class="box-well">
+              <div class="box-drum"><div class="box-pins" id="boxpins"></div></div>
+              <div class="box-comb" id="boxcomb"></div>
+            </div>
+          </div>
+          <div class="box-key"><i></i></div>
+        </div>
+        <div class="box-foot">
+          <span class="box-tune" id="boxtune">Music box</span>
+          <span class="box-close" id="boxclose">Swipe across to close</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="hint" id="hint"></div>
   <div class="dim" id="dim" aria-hidden="true"></div>
   <video class="awake" id="awake" src="keep-awake.mp4" muted loop playsinline webkit-playsinline autoplay preload="auto" aria-hidden="true"></video>
   <div class="sr-only" id="sr" aria-live="polite"></div>
 
   <script src="config.js"></script>
+  <script src="melody.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
