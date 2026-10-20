@@ -1,37 +1,9 @@
-/* Rajdhani (SIL OFL, see fonts/OFL.txt) — subset to ASCII, shipped as WOFF
-   because iOS 9 cannot read WOFF2. Self-hosted so the iPad renders exactly what
-   the desktop preview shows. */
-@font-face {
-  font-family: "Rajdhani";
-  src: url("fonts/rajdhani-500.woff") format("woff");
-  font-weight: 500;
-  font-style: normal;
-}
-@font-face {
-  font-family: "Rajdhani";
-  src: url("fonts/rajdhani-600.woff") format("woff");
-  font-weight: 600;
-  font-style: normal;
-}
-
-/* The Chinese face of the dark theme, in the two families robodiag.cn sets:
-   Ubuntu for the digits and the Latin, Alibaba PuHuiTi for the Chinese. Both
-   are subsets of the files the site serves; licences beside them in fonts/.
-   WOFF first for iOS 9, WOFF2 for everything else. */
-@font-face {
-  font-family: "Ubuntu";
-  src: url("fonts/ubuntu-700.woff2") format("woff2"),
-       url("fonts/ubuntu-700.woff") format("woff");
-  font-weight: 700;
-  font-style: normal;
-}
-@font-face {
-  font-family: "Ubuntu";
-  src: url("fonts/ubuntu-400.woff2") format("woff2"),
-       url("fonts/ubuntu-400.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-}
+/* 字制区喜脉体 (ZiZhiQu XiMaiTi) — the display face robodiag.cn titles its pages
+   and its wordmark with, and the face this clock sets both languages in. It
+   carries its own Latin, so the time, the date and the small print are one hand
+   in English and in Chinese alike. The file is a 149-glyph subset: everything
+   this clock can print, plus ASCII. Rebuilt by tools/make-zh-fonts.sh; licence
+   in fonts/LICENSE-ximaiti.txt. WOFF first for iOS 9, WOFF2 for the rest. */
 @font-face {
   font-family: "XiMaiTi";
   src: url("fonts/ximaiti-400.woff2") format("woff2"),
@@ -47,6 +19,24 @@
   src: url("fonts/ximaiti-400.woff2") format("woff2"),
        url("fonts/ximaiti-400.woff") format("woff");
   font-weight: 700;
+  font-style: normal;
+}
+
+/* Ubuntu is the site's Latin face and stays behind 喜脉体 in every stack, so a
+   character outside the subset still lands on a face that belongs to the same
+   page. */
+@font-face {
+  font-family: "Ubuntu";
+  src: url("fonts/ubuntu-700.woff2") format("woff2"),
+       url("fonts/ubuntu-700.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Ubuntu";
+  src: url("fonts/ubuntu-400.woff2") format("woff2"),
+       url("fonts/ubuntu-400.woff") format("woff");
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -178,9 +168,9 @@ body {
   width: 100%;
   text-align: center;
   color: #f4ecdd;
-  font-family: "Rajdhani", "Menlo", "SF Mono", "DejaVu Sans Mono", monospace;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
@@ -312,12 +302,6 @@ body {
   pointer-events: none;
 }
 
-body.theme-light .facet.bot:after,
-body.theme-light .facet.leaf-bot:after {
-  background-image: -webkit-linear-gradient(top, rgba(90, 74, 48, 0.16), rgba(90, 74, 48, 0));
-  background-image: linear-gradient(to bottom, rgba(90, 74, 48, 0.16), rgba(90, 74, 48, 0));
-}
-
 /* colon */
 .colon {
   position: relative;
@@ -345,10 +329,10 @@ body.theme-light .facet.leaf-bot:after {
   display: inline-block;
   vertical-align: bottom;
   color: #8d8477;
-  font-family: "Avenir Next", "Avenir", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  font-weight: 400;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -364,10 +348,10 @@ body.theme-light .facet.leaf-bot:after {
 
 .date {
   color: #ded4c3;
-  font-family: "Rajdhani", "Songti SC", "STSong", serif;
-  font-weight: 500;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.04em;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 
@@ -380,11 +364,10 @@ body.theme-light .facet.leaf-bot:after {
 
 .meta {
   color: #928a7d;
-  font-family: "Rajdhani", "Menlo", "SF Mono", sans-serif;
-  font-weight: 500;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 400;
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.04em;
   line-height: 1.5;
   text-transform: uppercase;
   white-space: nowrap;
@@ -474,14 +457,6 @@ body.theme-light .facet.leaf-bot:after {
 .quote.up .qchange { color: #c0705f; }
 .quote.down .qchange { color: #79a883; }
 
-body.theme-light .quote.up .qchange,
-body.theme-clay .quote.up .qchange { color: #b0503f; }
-body.theme-light .quote.down .qchange,
-body.theme-clay .quote.down .qchange { color: #4c7c5b; }
-
-body.theme-pixel .quote.up .qchange { color: #c47a68; }
-body.theme-pixel .quote.down .qchange { color: #7c9b74; }
-
 .note {
   display: inline-block;
   vertical-align: middle;
@@ -502,10 +477,10 @@ body.theme-pixel .quote.down .qchange { color: #7c9b74; }
   bottom: 2.5%;
   text-align: center;
   color: #7d7466;
-  font-family: "Rajdhani", "Menlo", monospace;
+  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   opacity: 0;
   pointer-events: none;
@@ -515,28 +490,6 @@ body.theme-pixel .quote.down .qchange { color: #7c9b74; }
 }
 
 .hint.show { opacity: 0.85; }
-
-/* The theme name, for a moment after a swipe. */
-.toast {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 6%;
-  text-align: center;
-  color: #cfc6b8;
-  font-family: "Rajdhani", "Menlo", monospace;
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  opacity: 0;
-  pointer-events: none;
-  -webkit-transition: opacity 0.4s ease;
-  transition: opacity 0.4s ease;
-  z-index: 18;
-}
-
-.toast.show { opacity: 0.9; }
 
 #dim {
   position: absolute;
@@ -567,327 +520,3 @@ body.theme-pixel .quote.down .qchange { color: #7c9b74; }
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-
-/* ---------------------------------------------------------------
-   Light theme
-   --------------------------------------------------------------- */
-
-body.theme-light {
-  color: #6d6558;
-  background: #efe9dd;
-  background-image: -webkit-radial-gradient(50% 38%, #faf6ee 0%, #efe9dd 60%, #e3dccd 100%);
-  background-image: radial-gradient(ellipse at 50% 38%, #faf6ee 0%, #efe9dd 60%, #e3dccd 100%);
-}
-
-body.theme-light .unit {
-  background: #efe9dd;
-  box-shadow: 0 18px 38px rgba(70, 58, 40, 0.16), 0 1px 2px rgba(70, 58, 40, 0.14);
-}
-
-body.theme-light .facet.top,
-body.theme-light .facet.leaf-top {
-  background-image: -webkit-linear-gradient(top, #fffdf8 0%, #f2ebdf 100%);
-  background-image: linear-gradient(to bottom, #fffdf8 0%, #f2ebdf 100%);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-body.theme-light .facet.bot,
-body.theme-light .facet.leaf-bot {
-  background-image: -webkit-linear-gradient(top, #ece4d6 0%, #e0d7c6 100%);
-  background-image: linear-gradient(to bottom, #ece4d6 0%, #e0d7c6 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-body.theme-light .facet span {
-  color: #23201b;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-body.theme-light .seam {
-  background: rgba(120, 105, 82, 0.28);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-body.theme-light .colon i { background: #a99d87; }
-
-body.lang-zh .meta { letter-spacing: 0.1em; }
-body.lang-zh .wdesc { letter-spacing: 0.04em; }
-body.lang-zh .date { letter-spacing: 0.04em; }
-
-/* ---------------------------------------------------------------
-   The Chinese face of the dark theme
-
-   When the clock runs in Chinese, dark is set in 字制区喜脉体, the display face
-   robodiag.cn sets its titles in — the digits included, because that face
-   carries its own Latin. Ubuntu stays behind it for anything the subset lacks.
-   Only dark: light, pixel and clay keep their own faces.
-   --------------------------------------------------------------- */
-
-body.theme-dark.lang-zh,
-body.theme-dark.lang-zh .facet span,
-body.theme-dark.lang-zh .date,
-body.theme-dark.lang-zh .meta,
-body.theme-dark.lang-zh .period,
-body.theme-dark.lang-zh .hint,
-body.theme-dark.lang-zh .toast {
-  font-family: "XiMaiTi", "Ubuntu", "PingFang SC", "Microsoft YaHei", sans-serif;
-  letter-spacing: 0;
-}
-
-body.theme-dark.lang-zh .facet span {
-  font-weight: 700;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-}
-
-body.theme-dark.lang-zh .date {
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-body.theme-dark.lang-zh .meta,
-body.theme-dark.lang-zh .period,
-body.theme-dark.lang-zh .hint,
-body.theme-dark.lang-zh .toast {
-  font-weight: 400;
-}
-body.theme-light .date { color: #2c2721; text-shadow: none; }
-body.theme-light .rule { background: rgba(70, 58, 40, 0.16); }
-body.theme-light .meta { color: #837866; }
-body.theme-light .sep { color: rgba(70, 58, 40, 0.3); }
-body.theme-light .period { color: #837866; }
-
-/* ---------------------------------------------------------------
-   Pixel faces
-
-   Monocraft (SIL OFL, see fonts/OFL-monocraft.txt) sets every
-   string. 'pixel' is drawn from the Twemco QT-30: a moulded case
-   with a bright rim, inset plates with a hairline seam and hinge
-   tabs, white caps on charcoal. 'clay' stays a flat block print.
-   --------------------------------------------------------------- */
-
-@font-face {
-  font-family: "Monocraft";
-  src: url("fonts/monocraft-400.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-}
-
-body.pix .facet span {
-  font-family: "Monocraft", "Rajdhani", monospace;
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-body.pix .date {
-  font-family: "Monocraft", "Rajdhani", "Songti SC", "STSong", serif;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-shadow: none;
-}
-
-body.pix .meta,
-body.pix .period,
-body.pix .hint,
-body.pix .toast {
-  font-family: "Monocraft", "Rajdhani", "Menlo", monospace;
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-/* A 9x9 mark is one em wide, so its cells are a third of the pixel face's
-   grid and land on whole pixels. */
-body.pix .wicon,
-body.pix .ficon {
-  width: 1em;
-  height: 1em;
-  vertical-align: -0.12em;
-}
-
-/* The case is measured to the cards in layout(); only the pixel theme
-   wears one. It lives inside .wrap so the drift carries it too. */
-.case {
-  position: absolute;
-  display: none;
-}
-
-/* ---------------------------------------------------------------
-   pixel — the Twemco
-   --------------------------------------------------------------- */
-
-body.theme-pixel {
-  color: #b6b1a6;
-  background-color: #121110;
-  background-image: none;
-}
-
-body.theme-pixel .case {
-  display: block;
-  background: #1d1c1a;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.5),
-    0 2px 5px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px #403c37,
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 0 0 9px rgba(0, 0, 0, 0.18),
-    inset 0 0 0 10px rgba(255, 255, 255, 0.04);
-}
-
-/* The plates float in the housing on their own shadow, so the case reads
-   as a moulding and not as a rectangle drawn behind the cards. */
-body.theme-pixel .unit {
-  background: #1c1b19;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
-}
-
-body.theme-pixel .facet.top,
-body.theme-pixel .facet.leaf-top {
-  background-image: none;
-  background-color: #2c2b29;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
-}
-
-body.theme-pixel .facet.bot,
-body.theme-pixel .facet.leaf-bot {
-  background-image: none;
-  background-color: #1c1b19;
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-
-body.theme-pixel .facet.top:after {
-  background-image: none;
-  background-color: rgba(0, 0, 0, 0.2);
-  height: 5px;
-}
-
-body.theme-pixel .facet.bot:after,
-body.theme-pixel .facet.leaf-bot:after {
-  background-image: none;
-  background-color: rgba(0, 0, 0, 0.12);
-  height: 5px;
-}
-
-/* The hinge: a dark hairline across the plate with the two little tabs
-   that hold the flap at either edge. This is the Twemco signature. */
-body.theme-pixel .seam {
-  height: 2px;
-  margin-top: -1px;
-  background: #070706;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-body.theme-pixel .seam:before,
-body.theme-pixel .seam:after {
-  content: "";
-  position: absolute;
-  top: -4px;
-  width: 4px;
-  height: 10px;
-  background: #070706;
-  border-radius: 1px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-body.theme-pixel .seam:before { left: 3px; }
-body.theme-pixel .seam:after { right: 3px; }
-
-body.theme-pixel .facet span {
-  color: #e8e4db;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-}
-
-/* Seconds are the small cards at the right: same plate, quieter ink, and
-   no hinge pins — at that size the tabs stop reading as hardware. */
-body.theme-pixel .secs .facet span { color: #bab5ab; }
-
-body.theme-pixel .secs .seam:before,
-body.theme-pixel .secs .seam:after { display: none; }
-
-body.theme-pixel .secs .seam { box-shadow: none; }
-
-body.theme-pixel .colon i {
-  background: #4a4741;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-body.theme-pixel .date { color: #ded9cd; }
-body.theme-pixel .meta { color: #8b867c; }
-body.theme-pixel .period { color: #8b867c; }
-body.theme-pixel .rule { height: 1px; background: rgba(232, 228, 219, 0.16); }
-body.theme-pixel .sep { color: rgba(255, 255, 255, 0.2); }
-body.theme-pixel .hint { color: #7b766c; }
-body.theme-pixel .toast { color: #ded9cd; }
-
-/* ---------------------------------------------------------------
-   clay — paper and terracotta, a flat block print on a grid
-   --------------------------------------------------------------- */
-
-body.theme-clay {
-  color: #4a443b;
-  background-color: #f1efe7;
-  background-image:
-    -webkit-linear-gradient(top, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, rgba(70, 58, 40, 0) 1px, rgba(70, 58, 40, 0) 8px),
-    -webkit-linear-gradient(left, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, rgba(70, 58, 40, 0) 1px, rgba(70, 58, 40, 0) 8px);
-  background-image:
-    linear-gradient(to bottom, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, transparent 1px, transparent 8px),
-    linear-gradient(to right, rgba(70, 58, 40, 0.045) 0, rgba(70, 58, 40, 0.045) 1px, transparent 1px, transparent 8px);
-}
-
-body.theme-clay .unit {
-  background: #cf6f50;
-  box-shadow: 0 6px 0 rgba(120, 60, 40, 0.22);
-}
-
-body.theme-clay .facet.top,
-body.theme-clay .facet.leaf-top {
-  background-image: none;
-  background-color: #dd8062;
-  box-shadow: inset 4px 4px 0 #f0a487, inset -4px 0 0 #a04d31;
-}
-
-body.theme-clay .facet.bot,
-body.theme-clay .facet.leaf-bot {
-  background-image: none;
-  background-color: #cd6c4d;
-  box-shadow: inset 4px 0 0 #e08f72, inset -4px -4px 0 #a04d31;
-}
-
-body.theme-clay .facet.top:after {
-  background-image: none;
-  background-color: rgba(0, 0, 0, 0.16);
-  height: 8px;
-}
-
-body.theme-clay .facet.bot:after,
-body.theme-clay .facet.leaf-bot:after {
-  background-image: none;
-  background-color: rgba(0, 0, 0, 0.14);
-  height: 8px;
-}
-
-body.theme-clay .seam {
-  height: 3px;
-  margin-top: -1.5px;
-  background: #9c4a2f;
-  box-shadow: 0 3px 0 rgba(255, 255, 255, 0.35);
-}
-
-body.theme-clay .facet span {
-  color: #fbf6ec;
-  text-shadow: 0.033em 0.033em 0 rgba(90, 35, 20, 0.45);
-}
-
-body.theme-clay .colon i {
-  border-radius: 0;
-  background: #b5532f;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
-}
-
-body.theme-clay .rule { height: 3px; background: rgba(181, 83, 47, 0.45); }
-body.theme-clay .date { color: #201e1a; text-shadow: 3px 3px 0 rgba(217, 119, 87, 0.3); }
-body.theme-clay .meta { color: #6f675b; }
-body.theme-clay .period { color: #6f675b; }
-body.theme-clay .hint { color: #8a8175; }
-body.theme-clay .sep { color: rgba(70, 58, 40, 0.3); }
-body.theme-clay .toast { color: #b5532f; }
-

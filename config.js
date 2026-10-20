@@ -4,21 +4,13 @@
 var CLOCK_CONFIG = {
 
   // 'en' English only (default). 'zh' Chinese, 'auto' follows the iPad's language.
-  // Chinese also brings the site's own type to the dark theme (Ubuntu digits,
-  // Alibaba PuHuiTi Chinese). ?lang=zh on the URL overrides this for one load.
+  // Both are set in the same face — 字制区喜脉体, the site's display type — so the
+  // board reads the same either way. ?lang=zh on the URL overrides this for one
+  // load, which is also how a home-screen shortcut can pin a language.
   lang: 'en',
 
   // false = 24-hour clock (09:41), true = 12-hour with a small AM/PM
   hour12: false,
-
-  // 'dark' (warm charcoal), 'light' (paper), 'pixel' (stone block, Minecraft)
-  // or 'clay' (terracotta on paper). Swipe across the glass to move through
-  // them; the swipe is remembered on the device.
-  theme: 'dark',
-
-  // Swipe left or right anywhere on the glass to change the theme.
-  // false pins the clock to the theme above and ignores swipes.
-  swipeThemes: true,
 
   // Show the small seconds pair next to the minutes
   showSeconds: true,

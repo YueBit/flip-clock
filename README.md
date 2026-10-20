@@ -22,7 +22,7 @@ Live: <https://yuebit.github.io/flip-clock/>
 | `.github/workflows/followers.yml` | the half-hourly job that refreshes it |
 | `sounds/` | four tick-and-tock pairs, 6–7 KB each |
 | `soundlab.html` | tap-to-compare page for choosing a sound |
-| `fonts/` | Rajdhani, Monocraft, and the Chinese face 字制区喜脉体 with Ubuntu behind it, each cut down to the characters the clock prints |
+| `fonts/` | 字制区喜脉体 — the display face both languages are set in — with Ubuntu behind it, each cut down to the characters the clock prints |
 | `keep-awake.mp4` | a two-pixel silent loop that asks iOS not to sleep |
 | `icon.svg`, `apple-touch-icon.png` | tab icon, home-screen icon |
 | `tools/make-sounds.py` | rebuilds the sound sets from their parameters |
@@ -48,8 +48,6 @@ Open `config.js`. These are the lines worth knowing.
 | `city: 'Hangzhou'` | **Change this first.** Weather comes from Open-Meteo by place name, no key needed. If two places share the name, set `lat` and `lon` instead. |
 | `weatherEvery: 15` | Minutes between weather refreshes. |
 | `lang: 'en'` | `'en'` for English only, `'zh'` for Chinese, `'auto'` to copy the iPad. `?lang=zh` on the URL overrides it for one load. |
-| `theme: 'dark'` | The theme the clock starts in: `'dark'` is charcoal and cream, `'light'` is paper and ink, `'pixel'` is a Twemco-style flip clock (charcoal case, white caps), `'clay'` is terracotta on cream paper. |
-| `swipeThemes: true` | Swipe left or right anywhere on the glass to change the theme. `false` pins the clock to `theme` and ignores swipes. |
 | `hour12: false` | `true` switches to a 12-hour face with a small AM/PM. |
 | `showSeconds: true` | The small seconds pair beside the minutes. Turn it off for a calmer board. |
 | `notes: []` | The line under the date. Empty means the line does not exist — a slot you have not filled stays empty. Fill it with strings and it rotates through them every `noteEvery` minutes. |
@@ -60,63 +58,28 @@ Open `config.js`. These are the lines worth knowing.
 | `animate: false` | Replaces the flip with a plain cut. Only needed if a very old iPad stutters. |
 | `drift: false` | Nudges the layout a few pixels every four minutes, so the panel never holds one image for weeks. Off by default: the redraw it forces can flash the cards on old hardware, and an LCD is not what burns in. |
 
-## Themes
+## One face
 
-Four of them, and a swipe moves through them: **dark → light → pixel → clay → dark**.
-Swipe left for the next, right for the previous; the name flashes at the top of
-the glass for a second, and a tap still only arms the sound. The choice is kept
-in `localStorage` on the device, so the clock comes back wearing the theme you
-left it in.
-
-To try one without editing a file — or to point a home-screen shortcut at it:
-
-```
-https://yuebit.github.io/flip-clock/?theme=pixel
-```
-
-`dark` · `light` · `pixel` · `clay`
-
-The two pixel themes share the type: **Monocraft** — a SIL OFL pixel face,
-licence in `fonts/OFL-monocraft.txt` — for the digits, the date and the weather
-line, with everything on a 9px grid (card heights are even, digit sizes are
-multiples of 9, and the weather and follower marks are 9×9 bitmaps, so the edges
-stay hard instead of greying out).
-
-`pixel` is a Twemco QT-30 pulled apart and rebuilt in pixels: a moulded charcoal
-case with a bright rim, inset plates with soft corners, a two-face plate split
-(a shade lighter above the hinge, a shade darker below), a hairline seam with
-the little hinge pins at each plate edge, white caps, and the seconds set
-smaller and quieter at the right. The case is measured to the cards in
-`layout()`, so it hugs them in either orientation and at any screen size.
-
-`clay` is a flat block print: terracotta plates, a hard 4px bevel, square
-corners and an 8px grid of hairlines behind it, in the warm colours of the
-Claude palette.
-
-### The Chinese dark face
-
-Set `lang: 'zh'` (or add `?lang=zh` to the URL) and the dark theme is set in
-**字制区喜脉体**, the display face robodiag.cn titles its pages and its wordmark
-with. The digits are 喜脉体's own — it carries a Latin alphabet, so the time, the
-date and the small print are all one hand rather than a display number over body
-text. Ubuntu stays behind it in the stack, so anything outside the subset still
-lands on the site's other face.
+Charcoal cards, cream digits, one theme only — there is nothing to swipe between.
+The type is **字制区喜脉体**, the display face robodiag.cn titles its pages and its
+wordmark with, and it sets both languages: the digits, the date, the weather line,
+the hint. 喜脉体 carries its own Latin alphabet, so English and Chinese are
+the same hand rather than a display number over body text. Ubuntu stays behind it
+in the stack, so anything outside the subset still lands on the site's other
+face.
 
 The file is a 149-glyph subset: the characters this clock can print, plus ASCII,
 cut from the 3.5 MB family. `tools/make-zh-fonts.sh` rebuilds it and fails if a
 character in the copy has no glyph. Licence: `fonts/LICENSE-ximaiti.txt`.
 
-`layout()` sets the card's type at `0.90h` for this face instead of Rajdhani's
-`0.92h`: 喜脉体's figures advance 0.60 em against Rajdhani's 0.50 and its ink runs
-0.77 em high, so at 0.90h the digit fills a `0.58h` card with the advance still
-inside the plate and the ink centred to within a pixel or two. The hint at the
-bottom is set two points larger than in the other themes, because a display face
-at 15 px stops being readable.
+`layout()` sets the card's type at `0.90h`: 喜脉体's figures advance 0.60 em
+against a Latin text face's 0.50 and its ink runs 0.77 em high, so at 0.90h the
+digit fills a `0.58h` card with the advance still inside the plate and the ink
+centred to within a pixel or two. The hint at the bottom keeps a larger floor,
+because a display face at 15 px stops being readable.
 
-Light, pixel and clay keep their own faces in Chinese; only dark changes, since
-that is the one that sits next to the site's own pages.
-
-`swipeThemes: false` pins the clock to the `theme` it was built with.
+Set `lang: 'zh'` for Chinese, or add `?lang=zh` to the URL — the same board,
+linkable, which is also how a home-screen shortcut pins a language.
 
 ## Bilibili followers
 
@@ -231,12 +194,10 @@ The JavaScript is ES5 — `var`, no arrow functions, no template strings — and
 every 3D transform carries its `-webkit-` twin, so a machine stuck on iOS 9 runs
 it without a stutter. On anything newer all of that is simply ignored.
 
-The type is Rajdhani, cut down to ASCII and shipped as **WOFF**: iOS 9 cannot
-read WOFF2, and a self-hosted face means the iPad draws exactly what the desktop
-preview showed instead of falling back to whatever serif the system happens to
-own. Delete the `@font-face` block and the stack drops to Menlo. Monocraft, the
-pixel face, ships the same way: a 10 KB WOFF subset, only downloaded when a
-pixel theme is actually on screen.
+The type is shipped as **WOFF** with a WOFF2 twin: iOS 9 cannot read WOFF2, and
+a self-hosted face means the iPad draws exactly what the desktop preview showed
+instead of falling back to whatever the system happens to own. Delete the
+`@font-face` block and the stack drops to the system faces.
 
 The weather is the only thing that touches the network. When it fails, the line
 hides itself and the clock carries on without it.
@@ -249,7 +210,5 @@ hides itself and the clock carries on without it.
 | The time is wrong | It follows the iPad's clock and time zone. |
 | The screen sleeps | Step 4 above. Confirm Auto-Lock really says `Never`. |
 | The flip stutters | `animate: false` in `config.js`. |
-| The theme is not the one set in `config.js` | A swipe is remembered on that device and wins over the config. `?theme=dark`, `?theme=light`, `?theme=pixel` or `?theme=clay` pins it for that load. |
 | Chinese text shows in a different face from the digits | A character was added to the copy after the font was cut. Run `tools/make-zh-fonts.sh`; it collects every Chinese character in the source and fails if one has no glyph. |
-| Swiping does nothing | The drag has to be mostly horizontal and at least 55px. Check `swipeThemes` is not `false`. |
 | No tick sound | Tap the page once, and check the side switch is not set to mute. |
